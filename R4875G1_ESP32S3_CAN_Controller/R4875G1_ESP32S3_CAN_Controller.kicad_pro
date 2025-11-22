@@ -408,6 +408,23 @@
     "subpart_first_id": 65,
     "subpart_id_separator": 0
   },
-  "sheets": [],
+  "sheets": [
+    [
+      "1fcf8bb1-5391-44f4-930a-289d1bf41e92",
+      "Root"
+    ],
+    [
+      "41714811-eb98-466d-b0be-b2050ebaf2fa",
+      "ESP32_S3"
+    ],
+    [
+      "b4b43a58-f5c2-4ea7-b5c3-dae326377c98",
+      "Power managemnet"
+    ],
+    [
+      "630c56c5-baef-4b26-b4de-4d39c3792fe7",
+      "CAN_RS485"
+    ]
+  ],
   "text_variables": {}
 }
