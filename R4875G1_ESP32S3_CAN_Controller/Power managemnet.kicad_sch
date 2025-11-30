@@ -781,6 +781,143 @@
 			)
 			(embedded_fonts no)
 		)
+		(symbol "Regulator_Linear:LM1117MP-3.3"
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -3.81 3.175 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Value" "LM1117MP-3.3"
+				(at 0 3.175 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(justify left)
+				)
+			)
+			(property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "http://www.ti.com/lit/ds/symlink/lm1117.pdf"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "800mA Low-Dropout Linear Regulator, 3.3V fixed output, SOT-223"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "linear regulator ldo fixed positive"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "SOT?223*"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "LM1117MP-3.3_0_1"
+				(rectangle
+					(start -5.08 -5.08)
+					(end 5.08 1.905)
+					(stroke
+						(width 0.254)
+						(type default)
+					)
+					(fill
+						(type background)
+					)
+				)
+			)
+			(symbol "LM1117MP-3.3_1_1"
+				(pin power_in line
+					(at -7.62 0 0)
+					(length 2.54)
+					(name "VI"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 -7.62 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_out line
+					(at 7.62 0 180)
+					(length 2.54)
+					(name "VO"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
 		(symbol "power:+3.3V"
 			(power)
 			(pin_numbers
@@ -1258,28 +1395,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(rectangle
-		(start 228.6 34.29)
-		(end 241.3 49.53)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(fill
-			(type none)
-		)
-		(uuid 9c0863bc-6ea9-4de1-bcdf-70c0bfc517dd)
-	)
-	(text "3V3 LDO"
-		(exclude_from_sim no)
-		(at 235.458 41.91 0)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-		)
-		(uuid "2b78dd2f-222a-41b0-8ed8-62dc480e18f7")
-	)
 	(text "Change this Diode"
 		(exclude_from_sim no)
 		(at 21.336 50.038 0)
@@ -1351,6 +1466,12 @@
 		(uuid "680a859a-b219-461c-9dfe-a967a39b24f8")
 	)
 	(junction
+		(at 218.44 49.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "6ae5fb4f-ffdc-41a0-8bc4-12b14d5d671e")
+	)
+	(junction
 		(at 189.23 49.53)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1387,6 +1508,12 @@
 		(uuid "94dcb33c-2cc7-4b17-b1c4-61c75e495ed9")
 	)
 	(junction
+		(at 234.95 49.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "953622ea-d206-4082-8fb3-0e19dc814eee")
+	)
+	(junction
 		(at 256.54 49.53)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -1399,10 +1526,28 @@
 		(uuid "a4434b1a-2fcc-49bc-9445-a51f44a57193")
 	)
 	(junction
+		(at 247.65 34.29)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "c4b5ff9c-a6f1-4288-b7f2-6cac1bffbc26")
+	)
+	(junction
+		(at 247.65 49.53)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "dcf6757e-ed83-4719-8dfb-6b1b0850a3f8")
+	)
+	(junction
 		(at 179.07 34.29)
 		(diameter 0)
 		(color 0 0 0 0)
 		(uuid "dda39807-65f7-4b30-875a-fd9d65f420c6")
+	)
+	(junction
+		(at 218.44 34.29)
+		(diameter 0)
+		(color 0 0 0 0)
+		(uuid "e2b860b2-5e50-47dd-a7cf-3b140c7f1833")
 	)
 	(junction
 		(at 189.23 34.29)
@@ -1564,6 +1709,26 @@
 	)
 	(wire
 		(pts
+			(xy 218.44 49.53) (xy 234.95 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3c7290d7-2c31-4dbe-8f6b-b629d7bc8992")
+	)
+	(wire
+		(pts
+			(xy 234.95 49.53) (xy 247.65 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3f5147b3-0333-49a8-ae66-e34537ad2c3b")
+	)
+	(wire
+		(pts
 			(xy 247.65 49.53) (xy 256.54 49.53)
 		)
 		(stroke
@@ -1571,6 +1736,16 @@
 			(type default)
 		)
 		(uuid "3fbfbae2-41ed-4f9f-880f-4b44f8dea50b")
+	)
+	(wire
+		(pts
+			(xy 218.44 34.29) (xy 227.33 34.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "40a63460-95df-4b19-bdc5-a50c55bf3287")
 	)
 	(wire
 		(pts
@@ -1701,6 +1876,16 @@
 			(type default)
 		)
 		(uuid "756e5d56-8ee6-4606-a0bc-7ac404975cff")
+	)
+	(wire
+		(pts
+			(xy 234.95 41.91) (xy 234.95 49.53)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7cb56730-012a-4818-80ea-5e53ae727416")
 	)
 	(wire
 		(pts
@@ -1921,6 +2106,16 @@
 			(type default)
 		)
 		(uuid "c6abe85f-5644-4716-bd8c-77b1eaa56f77")
+	)
+	(wire
+		(pts
+			(xy 242.57 34.29) (xy 247.65 34.29)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d1514ab4-c3ee-44db-bb52-bf3a325354f3")
 	)
 	(wire
 		(pts
@@ -2189,6 +2384,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 226.06 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "7b8db08e-f667-4e90-8bae-fe3140aebfaa")
 		)
@@ -2326,6 +2530,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 200.66 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "9dd8f1bc-ab0e-4e92-afd1-ff30a6cf5b56")
 		)
@@ -2396,6 +2609,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 168.91 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "463e4d5d-6785-445b-90b8-09febc30c616")
 		)
@@ -2458,6 +2680,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 256.54 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 256.54 41.91 0)
 			(effects
 				(font
@@ -2611,6 +2842,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 215.9 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "8c7002e4-2480-4eee-82b5-0945c280d586")
 		)
@@ -2654,7 +2894,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 			(at 82.2452 49.53 0)
 			(effects
 				(font
@@ -2673,6 +2913,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 81.28 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" "C0504 "
 			(at 81.28 45.72 0)
 			(effects
 				(font
@@ -2791,7 +3040,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 180.0352 45.72 0)
 			(effects
 				(font
@@ -2810,6 +3059,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 179.07 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 179.07 41.91 0)
 			(effects
 				(font
@@ -2897,6 +3155,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 226.06 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "8b8c6f52-a28e-42bc-9798-81956ce8409e")
 		)
@@ -2940,7 +3207,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1210_3225Metric_Pad1.33x2.70mm_HandSolder"
 			(at 91.1352 49.53 0)
 			(effects
 				(font
@@ -2959,6 +3226,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 90.17 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 90.17 45.72 0)
 			(effects
 				(font
@@ -3037,6 +3313,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 31.75 45.72 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "4fdf7dcc-c32b-4605-a893-22caa734e375")
 		)
@@ -3099,6 +3384,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 247.65 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 247.65 41.91 0)
 			(effects
 				(font
@@ -3309,6 +3603,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 215.9 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "93e85f94-d84f-4e1b-af24-10536611070d")
 		)
@@ -3388,6 +3691,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 236.22 100.33 90)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "fe68727c-114d-4500-ab4e-65f71b29650c")
 		)
@@ -3450,6 +3762,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 209.55 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 209.55 41.91 0)
 			(effects
 				(font
@@ -3544,6 +3865,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 39.37 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "3b5026ca-3bb5-4aae-93d0-140cfb9c5c28")
 		)
@@ -3621,6 +3951,86 @@
 			(project "R4875G1_ESP32S3_CAN_Controller"
 				(path "/1fcf8bb1-5391-44f4-930a-289d1bf41e92/b4b43a58-f5c2-4ea7-b5c3-dae326377c98"
 					(reference "#PWR04")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "Regulator_Linear:LM1117MP-3.3")
+		(at 234.95 34.29 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "9514843f-7105-4d2a-9025-c3af21da64a9")
+		(property "Reference" "U4"
+			(at 234.95 27.94 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "LM1117MP-3.3"
+			(at 234.95 30.48 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" "Package_TO_SOT_SMD:SOT-223-3_TabPin2"
+			(at 234.95 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "http://www.ti.com/lit/ds/symlink/lm1117.pdf"
+			(at 234.95 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" "800mA Low-Dropout Linear Regulator, 3.3V fixed output, SOT-223"
+			(at 234.95 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" "IC0994"
+			(at 234.95 34.29 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "1"
+			(uuid "d99d59ee-e5fa-4650-b611-4ceb5796720d")
+		)
+		(pin "3"
+			(uuid "cdb6e1f3-02cd-4b19-bba1-b7e7bb5222e0")
+		)
+		(pin "2"
+			(uuid "368092f0-c8d2-429c-b1fe-8277a7c52ed2")
+		)
+		(instances
+			(project ""
+				(path "/1fcf8bb1-5391-44f4-930a-289d1bf41e92/b4b43a58-f5c2-4ea7-b5c3-dae326377c98"
+					(reference "U4")
 					(unit 1)
 				)
 			)
@@ -3748,6 +4158,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 236.22 86.36 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "8b23b149-a597-4b2d-8fd7-aa4b5fb6034f")
 		)
@@ -3791,7 +4210,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_8x10"
 			(at 51.7652 49.53 0)
 			(effects
 				(font
@@ -3810,6 +4229,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 50.8 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 50.8 45.72 0)
 			(effects
 				(font
@@ -3888,6 +4316,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 218.44 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "f6897501-cf85-4ab4-8773-5d8b3c7a8859")
 		)
@@ -3922,7 +4359,7 @@
 				(justify left)
 			)
 		)
-		(property "Value" "1u"
+		(property "Value" "2u2"
 			(at 76.2 46.9899 0)
 			(effects
 				(font
@@ -3931,7 +4368,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_1812_4532Metric_Pad1.57x3.40mm_HandSolder"
 			(at 73.3552 49.53 0)
 			(effects
 				(font
@@ -3950,6 +4387,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 72.39 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" "C0591 "
 			(at 72.39 45.72 0)
 			(effects
 				(font
@@ -4068,7 +4514,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 190.1952 45.72 0)
 			(effects
 				(font
@@ -4087,6 +4533,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 189.23 41.91 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 189.23 41.91 0)
 			(effects
 				(font
@@ -4337,7 +4792,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:CP_Elec_8x10"
 			(at 61.9252 49.53 0)
 			(effects
 				(font
@@ -4356,6 +4811,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 60.96 45.72 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 60.96 45.72 0)
 			(effects
 				(font

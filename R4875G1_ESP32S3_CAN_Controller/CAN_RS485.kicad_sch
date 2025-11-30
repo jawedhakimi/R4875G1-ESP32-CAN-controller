@@ -3157,6 +3157,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 195.58 148.59 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "a83f6648-fbf4-49fe-984b-1a4e270b1f91")
 		)
@@ -3230,6 +3239,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 194.31 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "dcec8b8e-da99-4857-93c8-97438a08185a")
 		)
@@ -3273,7 +3291,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 202.8952 41.91 0)
 			(effects
 				(font
@@ -3292,6 +3310,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 201.93 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 201.93 38.1 0)
 			(effects
 				(font
@@ -3568,6 +3595,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 271.78 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "1"
 			(uuid "736cd554-ef2a-486f-9c29-ab5d4765d2fd")
 		)
@@ -3746,7 +3782,7 @@
 				(justify left)
 			)
 		)
-		(property "Footprint" ""
+		(property "Footprint" "Capacitor_SMD:C_0603_1608Metric_Pad1.08x0.95mm_HandSolder"
 			(at 191.4652 121.92 0)
 			(effects
 				(font
@@ -3765,6 +3801,15 @@
 			)
 		)
 		(property "Description" "Unpolarized capacitor"
+			(at 190.5 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 190.5 118.11 0)
 			(effects
 				(font
@@ -3835,6 +3880,15 @@
 			)
 		)
 		(property "Description" "Resistor, small symbol"
+			(at 185.42 33.02 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 185.42 33.02 0)
 			(effects
 				(font
@@ -3979,6 +4033,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 170.18 142.24 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "f16fe401-b57f-4028-82fd-8050d8131429")
 		)
@@ -4049,6 +4112,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 212.09 38.1 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "a7b6ec00-9ec2-4461-9a88-27f511915dda")
 		)
@@ -4111,6 +4183,15 @@
 			)
 		)
 		(property "Description" "High-Speed CAN Transceiver, separate VIO, silent mode, SOIC-8"
+			(at 212.09 134.62 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 212.09 134.62 0)
 			(effects
 				(font
@@ -4273,6 +4354,15 @@
 				(hide yes)
 			)
 		)
+		(property "ArosID" ""
+			(at 200.66 118.11 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
 		(pin "2"
 			(uuid "c8d00025-bfc1-40d0-9460-bd71f8199f85")
 		)
@@ -4334,6 +4424,15 @@
 		)
 		(property "Description" "Resistor"
 			(at 233.68 147.32 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
+			(at 233.68 147.32 90)
 			(effects
 				(font
 					(size 1.27 1.27)
@@ -4470,6 +4569,15 @@
 			)
 		)
 		(property "Description" "Industrial 3.3V Low Power Half-Duplex RS-485 Transceiver 10Mbps, SOIC-8"
+			(at 227.33 54.61 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 227.33 54.61 0)
 			(effects
 				(font
@@ -4624,6 +4732,15 @@
 			)
 		)
 		(property "Description" "Generic connector, single row, 01x02, script generated"
+			(at 246.38 144.78 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "ArosID" ""
 			(at 246.38 144.78 0)
 			(effects
 				(font
