@@ -733,6 +733,10 @@
     [
       "630c56c5-baef-4b26-b4de-4d39c3792fe7",
       "CAN_RS485"
+    ],
+    [
+      "cdc38c11-1ca7-4c1d-af51-e3d929a9ded4",
+      "Human interface_HI"
     ]
   ],
   "text_variables": {}
