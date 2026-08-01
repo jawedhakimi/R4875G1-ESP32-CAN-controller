@@ -5,12 +5,15 @@
 
 #include "ui.h"
 
+lv_obj_t *uic_Connectivity_ImgButtonConnectNetwork;
+lv_obj_t *uic_Connectivity_ImgButtonDeleteNetwork;
+lv_obj_t *uic_Connectivity_DropdownSavednetworks;
 lv_obj_t *uic_Connectivity_Keyboard;
 lv_obj_t *uic_Connectivity_TextAreaNetworkLog;
 lv_obj_t *uic_Connectivity_TextAreaPassword;
 lv_obj_t *uic_Connectivity_TextAreaSSID;
 lv_obj_t *uic_Connectivity;
-lv_obj_t *ui_Connectivity = NULL;lv_obj_t *ui_ScreenButtons4 = NULL;lv_obj_t *ui_Connectivity_TextAreaSSID = NULL;lv_obj_t *ui_Connectivity_TextAreaPassword = NULL;lv_obj_t *ui_Connectivity_TextAreaNetworkLog = NULL;lv_obj_t *ui_Connectivity_Keyboard = NULL;
+lv_obj_t *ui_Connectivity = NULL;lv_obj_t *ui_ScreenButtons4 = NULL;lv_obj_t *ui_Connectivity_TextAreaSSID = NULL;lv_obj_t *ui_Connectivity_TextAreaPassword = NULL;lv_obj_t *ui_Connectivity_TextAreaNetworkLog = NULL;lv_obj_t *ui_Connectivity_Keyboard = NULL;lv_obj_t *ui_Connectivity_DropdownSavednetworks = NULL;lv_obj_t *ui_Connectivity_ImgButtonDeleteNetwork = NULL;lv_obj_t *ui_Connectivity_ImgButtonConnectNetwork = NULL;
 // event funtions
 void ui_event_Connectivity_TextAreaSSID( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -71,9 +74,9 @@ lv_obj_set_style_text_font(ui_Connectivity_TextAreaPassword, &lv_font_montserrat
 
 ui_Connectivity_TextAreaNetworkLog = lv_textarea_create(ui_Connectivity);
 lv_obj_set_width( ui_Connectivity_TextAreaNetworkLog, lv_pct(98));
-lv_obj_set_height( ui_Connectivity_TextAreaNetworkLog, lv_pct(63));
+lv_obj_set_height( ui_Connectivity_TextAreaNetworkLog, lv_pct(40));
 lv_obj_set_x( ui_Connectivity_TextAreaNetworkLog, 0 );
-lv_obj_set_y( ui_Connectivity_TextAreaNetworkLog, -85 );
+lv_obj_set_y( ui_Connectivity_TextAreaNetworkLog, -86 );
 lv_obj_set_align( ui_Connectivity_TextAreaNetworkLog, LV_ALIGN_BOTTOM_MID );
 lv_textarea_set_text(ui_Connectivity_TextAreaNetworkLog,"Enter the network SSID and password. Then visit the xxx.xxx.xx.xx IP-address to control the device using a PC");
 lv_textarea_set_placeholder_text(ui_Connectivity_TextAreaNetworkLog,"Network Log");
@@ -88,6 +91,35 @@ lv_obj_add_flag( ui_Connectivity_Keyboard, LV_OBJ_FLAG_HIDDEN );   /// Flags
 
 lv_obj_set_style_text_font(ui_Connectivity_Keyboard, &lv_font_montserrat_18, LV_PART_ITEMS| LV_STATE_DEFAULT);
 
+ui_Connectivity_DropdownSavednetworks = lv_dropdown_create(ui_Connectivity);
+lv_dropdown_set_options( ui_Connectivity_DropdownSavednetworks, "Network 1\nNetwork 2\nNetwork 3" );
+lv_obj_set_width( ui_Connectivity_DropdownSavednetworks, lv_pct(98));
+lv_obj_set_height( ui_Connectivity_DropdownSavednetworks, lv_pct(8));
+lv_obj_set_x( ui_Connectivity_DropdownSavednetworks, 0 );
+lv_obj_set_y( ui_Connectivity_DropdownSavednetworks, -130 );
+lv_obj_set_align( ui_Connectivity_DropdownSavednetworks, LV_ALIGN_CENTER );
+lv_obj_add_flag( ui_Connectivity_DropdownSavednetworks, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
+
+ui_Connectivity_ImgButtonDeleteNetwork = lv_imgbtn_create(ui_Connectivity);
+lv_imgbtn_set_src(ui_Connectivity_ImgButtonDeleteNetwork, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_bin_45x45_png, NULL);
+lv_imgbtn_set_src(ui_Connectivity_ImgButtonDeleteNetwork, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_bin_45x45_png, NULL);
+lv_obj_set_width( ui_Connectivity_ImgButtonDeleteNetwork, 45);
+lv_obj_set_height( ui_Connectivity_ImgButtonDeleteNetwork, 45);
+lv_obj_set_x( ui_Connectivity_ImgButtonDeleteNetwork, -60 );
+lv_obj_set_y( ui_Connectivity_ImgButtonDeleteNetwork, -70 );
+lv_obj_set_align( ui_Connectivity_ImgButtonDeleteNetwork, LV_ALIGN_CENTER );
+lv_obj_set_style_transform_zoom(ui_Connectivity_ImgButtonDeleteNetwork, 200, LV_PART_MAIN| LV_STATE_PRESSED);
+
+ui_Connectivity_ImgButtonConnectNetwork = lv_imgbtn_create(ui_Connectivity);
+lv_imgbtn_set_src(ui_Connectivity_ImgButtonConnectNetwork, LV_IMGBTN_STATE_RELEASED, NULL, &ui_img_link_45x45_png, NULL);
+lv_imgbtn_set_src(ui_Connectivity_ImgButtonConnectNetwork, LV_IMGBTN_STATE_PRESSED, NULL, &ui_img_link_45x45_png, NULL);
+lv_obj_set_width( ui_Connectivity_ImgButtonConnectNetwork, 45);
+lv_obj_set_height( ui_Connectivity_ImgButtonConnectNetwork, 45);
+lv_obj_set_x( ui_Connectivity_ImgButtonConnectNetwork, 60 );
+lv_obj_set_y( ui_Connectivity_ImgButtonConnectNetwork, -70 );
+lv_obj_set_align( ui_Connectivity_ImgButtonConnectNetwork, LV_ALIGN_CENTER );
+lv_obj_set_style_transform_zoom(ui_Connectivity_ImgButtonConnectNetwork, 200, LV_PART_MAIN| LV_STATE_PRESSED);
+
 lv_obj_add_event_cb(ui_Connectivity_TextAreaSSID, ui_event_Connectivity_TextAreaSSID, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Connectivity_TextAreaPassword, ui_event_Connectivity_TextAreaPassword, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Connectivity_Keyboard, ui_event_Connectivity_Keyboard, LV_EVENT_ALL, NULL);
@@ -96,6 +128,9 @@ uic_Connectivity_TextAreaSSID = ui_Connectivity_TextAreaSSID;
 uic_Connectivity_TextAreaPassword = ui_Connectivity_TextAreaPassword;
 uic_Connectivity_TextAreaNetworkLog = ui_Connectivity_TextAreaNetworkLog;
 uic_Connectivity_Keyboard = ui_Connectivity_Keyboard;
+uic_Connectivity_DropdownSavednetworks = ui_Connectivity_DropdownSavednetworks;
+uic_Connectivity_ImgButtonDeleteNetwork = ui_Connectivity_ImgButtonDeleteNetwork;
+uic_Connectivity_ImgButtonConnectNetwork = ui_Connectivity_ImgButtonConnectNetwork;
 
 }
 
@@ -115,5 +150,11 @@ uic_Connectivity_TextAreaNetworkLog= NULL;
 ui_Connectivity_TextAreaNetworkLog= NULL;
 uic_Connectivity_Keyboard= NULL;
 ui_Connectivity_Keyboard= NULL;
+uic_Connectivity_DropdownSavednetworks= NULL;
+ui_Connectivity_DropdownSavednetworks= NULL;
+uic_Connectivity_ImgButtonDeleteNetwork= NULL;
+ui_Connectivity_ImgButtonDeleteNetwork= NULL;
+uic_Connectivity_ImgButtonConnectNetwork= NULL;
+ui_Connectivity_ImgButtonConnectNetwork= NULL;
 
 }

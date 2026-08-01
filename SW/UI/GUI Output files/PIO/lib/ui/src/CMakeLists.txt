@@ -12,6 +12,8 @@ SET(SOURCES ui_comp_screenbuttons.c
     ui_img_home_copy_png.c
     ui_img_setvalues_copy_png.c
     ui_img_settings_copy_png.c
-    ui_img_connectivity_copy_png.c)
+    ui_img_connectivity_copy_png.c
+    ui_img_bin_45x45_png.c
+    ui_img_link_45x45_png.c)
 
 add_library(ui ${SOURCES})

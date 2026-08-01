@@ -45,6 +45,8 @@ LV_IMG_DECLARE( ui_img_home_copy_png);   // assets/home copy.png
 LV_IMG_DECLARE( ui_img_setvalues_copy_png);   // assets/SetValues copy.png
 LV_IMG_DECLARE( ui_img_settings_copy_png);   // assets/settings copy.png
 LV_IMG_DECLARE( ui_img_connectivity_copy_png);   // assets/connectivity copy.png
+LV_IMG_DECLARE( ui_img_bin_45x45_png);   // assets/bin 45x45.png
+LV_IMG_DECLARE( ui_img_link_45x45_png);   // assets/link 45x45.png
 
 // UI INIT
 void ui_init(void);

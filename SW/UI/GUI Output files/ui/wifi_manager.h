@@ -3,14 +3,19 @@
 
 #include <Arduino.h>
 
-/* Loads any saved WiFi credentials from NVS, pre-fills the Connectivity
-   screen's fields with them, and kicks off an initial connect attempt if
-   present. Call once from setup(), after ui_init(). */
+/* Loads the saved-network list from NVS, populates the Connectivity
+   screen's dropdown with it, and auto-connects to the most recently saved
+   network if there is one. Call once from setup(), after ui_init(). */
 void wifi_manager_begin();
 
-/* Registers the Connectivity screen's SSID/password field callbacks
-   (submitting the password field triggers a connect attempt with whatever
-   is currently in both fields). Call once from setup(). */
+/* Registers the Connectivity screen's callbacks:
+   - submitting the password field (keyboard OK) or pressing the Connect
+     button both connect using whatever's typed in the SSID/password
+     fields, falling back to the saved-network dropdown's selection if the
+     SSID field is empty;
+   - the Delete button removes the dropdown's selected saved network.
+   A network is only added to the saved list once it's actually connected
+   -- a typo'd SSID/password never gets saved. Call once from setup(). */
 void wifi_manager_register_callbacks();
 
 /* Non-blocking connect/retry state machine + status logging to

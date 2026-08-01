@@ -22,12 +22,18 @@ extern lv_obj_t *ui_Connectivity_TextAreaPassword;
 extern lv_obj_t *ui_Connectivity_TextAreaNetworkLog;
 extern void ui_event_Connectivity_Keyboard( lv_event_t * e);
 extern lv_obj_t *ui_Connectivity_Keyboard;
+extern lv_obj_t *ui_Connectivity_DropdownSavednetworks;
+extern lv_obj_t *ui_Connectivity_ImgButtonDeleteNetwork;
+extern lv_obj_t *ui_Connectivity_ImgButtonConnectNetwork;
 // CUSTOM VARIABLES
 extern lv_obj_t *uic_Connectivity;
 extern lv_obj_t *uic_Connectivity_TextAreaSSID;
 extern lv_obj_t *uic_Connectivity_TextAreaPassword;
 extern lv_obj_t *uic_Connectivity_TextAreaNetworkLog;
 extern lv_obj_t *uic_Connectivity_Keyboard;
+extern lv_obj_t *uic_Connectivity_DropdownSavednetworks;
+extern lv_obj_t *uic_Connectivity_ImgButtonDeleteNetwork;
+extern lv_obj_t *uic_Connectivity_ImgButtonConnectNetwork;
 
 #ifdef __cplusplus
 } /*extern "C"*/
