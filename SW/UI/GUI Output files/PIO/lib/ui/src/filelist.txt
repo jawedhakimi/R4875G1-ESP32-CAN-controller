@@ -1,0 +1,15 @@
+ui_comp_screenbuttons.c
+ui_comp.c
+ui_Home.c
+ui_SetValues.c
+ui_Settings.c
+ui_Connectivity.c
+ui_theme_manager.c
+ui_themes.c
+ui.c
+ui_comp_hook.c
+ui_helpers.c
+ui_img_home_copy_png.c
+ui_img_setvalues_copy_png.c
+ui_img_settings_copy_png.c
+ui_img_connectivity_copy_png.c

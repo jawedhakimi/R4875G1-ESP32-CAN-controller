@@ -1,0 +1,6 @@
+This folder is intentionally empty.
+
+platformio.ini sets `src_dir = ../ui`, so the actual firmware source lives
+in `GUI Output files/ui/` (ui.ino + the app_state/backlight/psu_control/...
+modules), not here. That keeps a single copy of the code instead of one
+for Arduino IDE and a separate one for PlatformIO.

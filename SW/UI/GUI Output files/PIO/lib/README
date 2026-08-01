@@ -1,0 +1,65 @@
+This folder holds the project's libraries directly (ui, lvgl, TFT_eSPI,
+ArduinoJson, HuaweiCAN) -- this is PlatformIO's default `lib_dir`, so
+`platformio.ini` doesn't need a `lib_extra_dirs` entry; these are just
+auto-discovered.
+
+`HuaweiCAN` in here is a symlink (relative path
+`../../../../libraries/HuaweiCAN`) to `SW/libraries/HuaweiCAN`, not a copy --
+that keeps the CAN driver as a single source of truth shared with the
+`CAN_controller` bench sketch (Arduino IDE), instead of two copies that can
+quietly drift apart. Everything else (ui/lvgl/TFT_eSPI/ArduinoJson) is a real
+copy local to this PIO project -- if you regenerate those from SquareLine
+Studio or bump versions, update them here.
+
+NOTE: these libraries used to also live in `GUI Output files/libraries/`
+where an Arduino IDE sketchbook pointed at `GUI Output files/` could find
+them; they've now moved to live only here. If you still need the Arduino IDE
+build path (see the root `SETUP_NOTES.md`), point its sketchbook/libraries
+at this `lib/` folder instead -- Arduino IDE requires a folder literally
+named `libraries`, so it won't auto-discover a folder named `lib`.
+
+This directory is intended for project specific (private) libraries.
+PlatformIO will compile them to static libraries and link into the executable file.
+
+The source code of each library should be placed in a separate directory
+("lib/your_library_name/[Code]").
+
+For example, see the structure of the following example libraries `Foo` and `Bar`:
+
+|--lib
+|  |
+|  |--Bar
+|  |  |--docs
+|  |  |--examples
+|  |  |--src
+|  |     |- Bar.c
+|  |     |- Bar.h
+|  |  |- library.json (optional. for custom build options, etc) https://docs.platformio.org/page/librarymanager/config.html
+|  |
+|  |--Foo
+|  |  |- Foo.c
+|  |  |- Foo.h
+|  |
+|  |- README --> THIS FILE
+|
+|- platformio.ini
+|--src
+   |- main.c
+
+Example contents of `src/main.c` using Foo and Bar:
+```
+#include <Foo.h>
+#include <Bar.h>
+
+int main (void)
+{
+  ...
+}
+
+```
+
+The PlatformIO Library Dependency Finder will find automatically dependent
+libraries by scanning project source files.
+
+More information about PlatformIO Library Dependency Finder
+- https://docs.platformio.org/page/librarymanager/ldf.html

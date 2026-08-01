@@ -1,5 +1,5 @@
 #include <Arduino.h>
-#include "HuaweiCAN.h"
+#include <HuaweiCAN.h>
 
 HuaweiCAN psu;
 
@@ -31,6 +31,12 @@ void setup() {
 
 void loop() {
   psu.readAndDecodeResponse();
+
+  static unsigned long last_health_check = 0;
+  if (millis() - last_health_check >= 1000) {
+    last_health_check = millis();
+    psu.checkBusHealth();
+  }
 
   if (Serial.available()) {
     String cmd = Serial.readStringUntil('\n');
