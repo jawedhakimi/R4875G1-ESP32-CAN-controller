@@ -47,22 +47,26 @@ void save_current_settings_to_ui() {
     ui_set_text_safe(ui_VarOfflineIout, b);
 
     snprintf(b, sizeof(b), "%d%%", saved_brightness_pct);
-    ui_set_text_safe(ui_Settings_LabelBrightness, b);
+    ui_set_text_safe(ui_VarBrightness, b);
 
-    snprintf(b, sizeof(b), "%d", saved_sleep_sec);
-    ui_set_text_safe(ui_Settings_TextAreaSleep, b);
+    snprintf(b, sizeof(b), "Sleep after: %d s", saved_sleep_sec);
+    ui_set_text_safe(ui_VarSleepTimer, b);
 
-    ui_set_text_safe(ui_SetValues_TextAreaVarTimer, format_hms(saved_timer_seconds).c_str());
+    ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(saved_timer_seconds).c_str());
 
-    if (ui_Settings_SliderBrightness && obj_is_slider(ui_Settings_SliderBrightness)) {
-        lv_slider_set_value(ui_Settings_SliderBrightness, saved_brightness_pct, LV_ANIM_OFF);
+    if (ui_SliderBrightness && obj_is_slider(ui_SliderBrightness)) {
+        lv_slider_set_value(ui_SliderBrightness, saved_brightness_pct, LV_ANIM_OFF);
+    }
+
+    if (ui_SliderSleepTimer && obj_is_slider(ui_SliderSleepTimer)) {
+        lv_slider_set_value(ui_SliderSleepTimer, saved_sleep_sec, LV_ANIM_OFF);
     }
 
     update_energy_ui();
 
-    if (ui_SetValues_CheckboxUseTimer) {
-        if (saved_use_timer) lv_obj_add_state(ui_SetValues_CheckboxUseTimer, LV_STATE_CHECKED);
-        else lv_obj_clear_state(ui_SetValues_CheckboxUseTimer, LV_STATE_CHECKED);
+    if (ui_SetValues_SwitchTimer) {
+        if (saved_use_timer) lv_obj_add_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
+        else lv_obj_clear_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
     }
 
     // NOTE: called before psu_control_register_callbacks(), so

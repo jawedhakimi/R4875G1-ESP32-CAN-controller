@@ -3,6 +3,7 @@
 #include "app_state.h"
 #include "ui_safe.h"
 #include "prefs_store.h"
+#include "beep.h"
 
 String format_hms(uint32_t totalSec) {
     uint32_t h = totalSec / 3600;
@@ -66,6 +67,11 @@ void psu_timer_configure(uint32_t seconds) {
     last_timer_tick_ms = millis();
     save_uint_pref("timer_sec", seconds);
 
+    // Reflects into ui_SetValues_TextAreaTimer even when this was called
+    // from the serial console / web API, same as the psu_set_*() setters do
+    // for their own widgets -- keeps every control surface in sync.
+    ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(seconds).c_str());
+
     if (seconds == 0) {
         log_to_settings("Timer disabled (00.00.00)");
     } else {
@@ -77,6 +83,13 @@ void psu_timer_configure(uint32_t seconds) {
 void psu_timer_set_enabled(bool enabled) {
     saved_use_timer = enabled;
     save_bool_pref("use_timer", enabled);
+
+    suppress_timer_switch_event = true;
+    if (ui_SetValues_SwitchTimer) {
+        if (enabled) lv_obj_add_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
+        else lv_obj_clear_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
+    }
+    suppress_timer_switch_event = false;
 
     if (enabled && saved_timer_seconds > 0 && saved_output_enable) {
         timer_remaining_seconds = saved_timer_seconds;
@@ -105,11 +118,9 @@ void handle_psu_timer() {
             timer_remaining_seconds--;
         }
 
-        // NOTE: the run-timer field (ui_SetValues_TextAreaVarTimer) no
-        // longer exists in the current SquareLine UI -- see
-        // psu_timer_register_callbacks() below. The countdown itself still
-        // runs; it's just not shown on screen anymore (still visible via
-        // the serial console's "s" command).
+        if (ui_SetValues_TextAreaTimer && obj_is_textarea(ui_SetValues_TextAreaTimer)) {
+            ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(timer_remaining_seconds).c_str());
+        }
 
         if (timer_remaining_seconds == 0) {
             psu.enableOutput(false);
@@ -132,13 +143,55 @@ void handle_psu_timer() {
     }
 }
 
-// The run-timer field (ui_SetValues_TextAreaVarTimer) and "use timer"
-// checkbox (ui_SetValues_CheckboxUseTimer) no longer exist in the current
-// SquareLine UI -- SetValues was redesigned to a static help panel instead.
-// The timer feature itself (saved_timer_seconds/timer_running/
-// handle_psu_timer() above) still works headlessly and is still
-// controllable over serial ("timer=HH.MM.SS", "usetimer=0/1" -- see
-// serial_console.cpp). If a timer control comes back to the UI, re-add
-// timer_setting_cb/timer_checkbox_cb here (see git history).
+// The run-timer field (ui_SetValues_TextAreaTimer) and "use timer" slide
+// switch (ui_SetValues_SwitchTimer) are back in the current SquareLine UI
+// (SetValues screen), replacing the earlier static help panel. Both route
+// through the same shared setters (psu_timer_configure/psu_timer_set_enabled)
+// the serial console and web API already use, so all three surfaces stay
+// in sync with each other.
+static void timer_setting_cb(lv_event_t *e) {
+    lv_obj_t *target = lv_event_get_target(e);
+    if (!target) return;
+
+    String text = ui_get_text_safe(target);
+    uint32_t secs = 0;
+
+    if (!parse_hms_string(text, secs)) {
+        log_to_settings("Invalid timer format. Use HH.MM.SS");
+        ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(saved_timer_seconds).c_str());
+        return;
+    }
+
+    psu_timer_configure(secs);
+}
+
+static void timer_switch_cb(lv_event_t *e) {
+    if (suppress_timer_switch_event) return;
+
+    lv_obj_t *sw = lv_event_get_target(e);
+    if (!sw) return;
+
+    psu_timer_set_enabled(lv_obj_has_state(sw, LV_STATE_CHECKED));
+}
+
 void psu_timer_register_callbacks() {
+    // Sync initial widget state from saved_* BEFORE attaching the event
+    // callbacks below, same ordering backlight_register_callbacks() uses
+    // for its sliders -- avoids needing to suppress a self-triggered event
+    // on the very first state change.
+    if (ui_SetValues_TextAreaTimer) {
+        ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(saved_timer_seconds).c_str());
+
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, timer_setting_cb, LV_EVENT_READY, NULL);
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, user_beep_cb, LV_EVENT_FOCUSED, NULL);
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, user_beep_cb, LV_EVENT_READY, NULL);
+    }
+
+    if (ui_SetValues_SwitchTimer) {
+        if (saved_use_timer) lv_obj_add_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
+        else lv_obj_clear_state(ui_SetValues_SwitchTimer, LV_STATE_CHECKED);
+
+        lv_obj_add_event_cb(ui_SetValues_SwitchTimer, timer_switch_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_add_event_cb(ui_SetValues_SwitchTimer, user_beep_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    }
 }

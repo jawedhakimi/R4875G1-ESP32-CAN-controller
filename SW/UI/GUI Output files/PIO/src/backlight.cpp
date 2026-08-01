@@ -72,7 +72,7 @@ static void brightness_slider_cb(lv_event_t *e) {
 
     char buf[16];
     snprintf(buf, sizeof(buf), "%d%%", saved_brightness_pct);
-    ui_set_text_safe(ui_Settings_LabelBrightness, buf);
+    ui_set_text_safe(ui_VarBrightness, buf);
 
     last_activity_time = millis();
 
@@ -81,46 +81,57 @@ static void brightness_slider_cb(lv_event_t *e) {
     }
 }
 
-static void settings_numeric_cb(lv_event_t *e) {
+/* Same debounce pattern as brightness_slider_cb above: the timeout +
+   on-screen label update happen on every tick (cheap, RAM-only), but the
+   value is only persisted to flash once, when the drag ends. Slider range
+   (SLEEP_SEC_MIN..SLEEP_SEC_MAX) is set on ui_SliderSleepTimer in
+   backlight_register_callbacks() below; 0 means "never sleep". */
+static void sleep_slider_cb(lv_event_t *e) {
     lv_obj_t *target = lv_event_get_target(e);
-    if (!target) return;
+    if (!target || !obj_is_slider(target)) return;
 
-    String text = ui_get_text_safe(target);
-    int val = text.toInt();
-    char buf[16];
+    lv_event_code_t code = lv_event_get_code(e);
 
-    if (target == ui_Settings_TextAreaSleep) {
-        val = constrain(val, 5, 3600);
-        saved_sleep_sec = val;
-        saved_dim_sec = max(3, saved_sleep_sec / 2);
+    int val = lv_slider_get_value(target);
+    val = constrain(val, SLEEP_SEC_MIN, SLEEP_SEC_MAX);
+    saved_sleep_sec = val;
+    saved_dim_sec = (saved_sleep_sec > 0) ? max(3, saved_sleep_sec / 2) : 0;
 
+    off_timeout_ms = (unsigned long)saved_sleep_sec * 1000UL;
+    dim_timeout_ms = (unsigned long)saved_dim_sec * 1000UL;
+
+    char buf[32];
+    snprintf(buf, sizeof(buf), "Sleep after: %d s", saved_sleep_sec);
+    ui_set_text_safe(ui_VarSleepTimer, buf);
+
+    last_activity_time = millis();
+
+    if (code == LV_EVENT_RELEASED) {
         save_int_pref("sleep", saved_sleep_sec);
         save_int_pref("dim", saved_dim_sec);
 
-        off_timeout_ms = (unsigned long)saved_sleep_sec * 1000UL;
-        dim_timeout_ms = (unsigned long)saved_dim_sec * 1000UL;
-
-        snprintf(buf, sizeof(buf), "%d", saved_sleep_sec);
-        ui_set_text_safe(ui_Settings_TextAreaSleep, buf);
-
-        log_to_settings("Display sleep set to " + String(saved_sleep_sec) + " s");
+        if (saved_sleep_sec == 0) {
+            log_to_settings("Display sleep disabled");
+        } else {
+            log_to_settings("Display sleep set to " + String(saved_sleep_sec) + " s");
+        }
     }
-
-    last_activity_time = millis();
 }
 
 void backlight_register_callbacks() {
-    if (ui_Settings_SliderBrightness) {
-        lv_slider_set_range(ui_Settings_SliderBrightness, 1, 100);
-        lv_slider_set_value(ui_Settings_SliderBrightness, saved_brightness_pct, LV_ANIM_OFF);
-        lv_obj_add_event_cb(ui_Settings_SliderBrightness, brightness_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
-        lv_obj_add_event_cb(ui_Settings_SliderBrightness, brightness_slider_cb, LV_EVENT_RELEASED, NULL);
-        lv_obj_add_event_cb(ui_Settings_SliderBrightness, user_beep_cb, LV_EVENT_PRESSED, NULL);
+    if (ui_SliderBrightness) {
+        lv_slider_set_range(ui_SliderBrightness, 1, 100);
+        lv_slider_set_value(ui_SliderBrightness, saved_brightness_pct, LV_ANIM_OFF);
+        lv_obj_add_event_cb(ui_SliderBrightness, brightness_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_add_event_cb(ui_SliderBrightness, brightness_slider_cb, LV_EVENT_RELEASED, NULL);
+        lv_obj_add_event_cb(ui_SliderBrightness, user_beep_cb, LV_EVENT_PRESSED, NULL);
     }
 
-    if (ui_Settings_TextAreaSleep) {
-        lv_obj_add_event_cb(ui_Settings_TextAreaSleep, settings_numeric_cb, LV_EVENT_READY, NULL);
-        lv_obj_add_event_cb(ui_Settings_TextAreaSleep, user_beep_cb, LV_EVENT_FOCUSED, NULL);
-        lv_obj_add_event_cb(ui_Settings_TextAreaSleep, user_beep_cb, LV_EVENT_READY, NULL);
+    if (ui_SliderSleepTimer) {
+        lv_slider_set_range(ui_SliderSleepTimer, SLEEP_SEC_MIN, SLEEP_SEC_MAX);
+        lv_slider_set_value(ui_SliderSleepTimer, saved_sleep_sec, LV_ANIM_OFF);
+        lv_obj_add_event_cb(ui_SliderSleepTimer, sleep_slider_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_add_event_cb(ui_SliderSleepTimer, sleep_slider_cb, LV_EVENT_RELEASED, NULL);
+        lv_obj_add_event_cb(ui_SliderSleepTimer, user_beep_cb, LV_EVENT_PRESSED, NULL);
     }
 }

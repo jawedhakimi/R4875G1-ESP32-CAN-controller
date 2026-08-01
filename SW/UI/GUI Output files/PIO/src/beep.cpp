@@ -58,9 +58,4 @@ void beep_hook_numpads() {
         lv_obj_add_event_cb(ui_Numpad, user_beep_cb, LV_EVENT_VALUE_CHANGED, NULL);
         lv_obj_add_event_cb(ui_Numpad, user_beep_cb, LV_EVENT_READY, NULL);
     }
-
-    if (ui_Numpad2) {
-        lv_obj_add_event_cb(ui_Numpad2, user_beep_cb, LV_EVENT_VALUE_CHANGED, NULL);
-        lv_obj_add_event_cb(ui_Numpad2, user_beep_cb, LV_EVENT_READY, NULL);
-    }
 }

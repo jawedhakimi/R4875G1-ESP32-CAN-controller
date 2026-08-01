@@ -12,8 +12,8 @@ String format_energy_kwh(double kwh) {
 }
 
 void update_energy_ui() {
-    if (ui_VarEnergy) {
-        ui_set_text_safe(ui_VarEnergy, format_energy_kwh(energy_kwh).c_str());
+    if (ui_VArEnergy) {
+        ui_set_text_safe(ui_VArEnergy, format_energy_kwh(energy_kwh).c_str());
     }
 }
 
@@ -60,11 +60,11 @@ static void reset_energy_cb(lv_event_t *e) {
 }
 
 void energy_meter_register_callbacks() {
-    if (ui_Settings_ButtonResetEnergy) {
+    if (ui_ButtonResetEnergy) {
         // BUGFIX: the original sketch registered *both* reset_energy_cb
         // (which itself calls user_beep()) and user_beep_cb for
         // LV_EVENT_CLICKED on this same button, so the buzzer sounded
         // twice per tap. reset_energy_cb's own beep is enough.
-        lv_obj_add_event_cb(ui_Settings_ButtonResetEnergy, reset_energy_cb, LV_EVENT_CLICKED, NULL);
+        lv_obj_add_event_cb(ui_ButtonResetEnergy, reset_energy_cb, LV_EVENT_CLICKED, NULL);
     }
 }

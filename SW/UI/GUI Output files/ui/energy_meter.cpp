@@ -12,7 +12,7 @@ String format_energy_kwh(double kwh) {
 }
 
 void update_energy_ui() {
-    ui_set_text_safe(ui_VarEnergy, format_energy_kwh(energy_kwh).c_str());
+    ui_set_text_safe(ui_VArEnergy, format_energy_kwh(energy_kwh).c_str());
 }
 
 void energy_reset() {

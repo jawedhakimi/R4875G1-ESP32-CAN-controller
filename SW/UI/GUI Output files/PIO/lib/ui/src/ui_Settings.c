@@ -9,17 +9,35 @@ lv_obj_t *uic_LabelResetEnergy;
 lv_obj_t *uic_ButtonResetEnergy;
 lv_obj_t *uic_Settings_TextAreaLogs;
 lv_obj_t *uic_Settings_DropdownFanControll;
-lv_obj_t *uic_VarBrightness;
+lv_obj_t *uic_SliderSleepTimer;
+lv_obj_t *uic_VarSleepTimer;
 lv_obj_t *uic_SliderBrightness;
+lv_obj_t *uic_VarBrightness;
 lv_obj_t *uic_PanelBrightness;
 lv_obj_t *uic_Settings;
-lv_obj_t *ui_Settings = NULL;lv_obj_t *ui_ScreenButtons3 = NULL;lv_obj_t *ui_PanelBrightness = NULL;lv_obj_t *ui_SliderBrightness = NULL;lv_obj_t *ui_VarBrightness = NULL;lv_obj_t *ui_Settings_DropdownFanControll = NULL;lv_obj_t *ui_Settings_TextAreaLogs = NULL;lv_obj_t *ui_Settings_Label7 = NULL;lv_obj_t *ui_ButtonResetEnergy = NULL;lv_obj_t *ui_LabelResetEnergy = NULL;
+lv_obj_t *ui_Settings = NULL;lv_obj_t *ui_ScreenButtons3 = NULL;lv_obj_t *ui_PanelBrightness = NULL;lv_obj_t *ui_VarBrightness = NULL;lv_obj_t *ui_SliderBrightness = NULL;lv_obj_t *ui_VarSleepTimer = NULL;lv_obj_t *ui_SliderSleepTimer = NULL;lv_obj_t *ui_Settings_DropdownFanControll = NULL;lv_obj_t *ui_Settings_TextAreaLogs = NULL;lv_obj_t *ui_ButtonResetEnergy = NULL;lv_obj_t *ui_LabelResetEnergy = NULL;
 // event funtions
 void ui_event_SliderBrightness( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
 
 if ( event_code == LV_EVENT_CLICKED) {
       _ui_slider_set_text_value( ui_VarBrightness, target, "BACKLIGHT: ", " %");
+}
+}
+
+void ui_event_VarSleepTimer( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+
+if ( event_code == LV_EVENT_CLICKED) {
+      _ui_slider_set_text_value( ui_VarSleepTimer, target, "Sleep after: ", " S");
+}
+}
+
+void ui_event_SliderSleepTimer( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);lv_obj_t * target = lv_event_get_target(e);
+
+if ( event_code == LV_EVENT_CLICKED) {
+      _ui_slider_set_text_value( ui_VarSleepTimer, target, "Sleep after: ", "s");
 }
 }
 
@@ -35,10 +53,19 @@ lv_obj_set_x( ui_ScreenButtons3, 0 );
 lv_obj_set_y( ui_ScreenButtons3, -2 );
 
 ui_PanelBrightness = lv_obj_create(ui_Settings);
-lv_obj_set_height( ui_PanelBrightness, 77);
+lv_obj_set_height( ui_PanelBrightness, 133);
 lv_obj_set_width( ui_PanelBrightness, lv_pct(98));
 lv_obj_set_align( ui_PanelBrightness, LV_ALIGN_TOP_MID );
 lv_obj_clear_flag( ui_PanelBrightness, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_VarBrightness = lv_label_create(ui_PanelBrightness);
+lv_obj_set_width( ui_VarBrightness, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_VarBrightness, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_VarBrightness, 0 );
+lv_obj_set_y( ui_VarBrightness, -49 );
+lv_obj_set_align( ui_VarBrightness, LV_ALIGN_CENTER );
+lv_label_set_text(ui_VarBrightness,"BACKLIGHT: ");
+lv_obj_set_style_text_font(ui_VarBrightness, &lv_font_montserrat_18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_SliderBrightness = lv_slider_create(ui_PanelBrightness);
 lv_slider_set_value( ui_SliderBrightness, 50, LV_ANIM_OFF);
@@ -46,7 +73,7 @@ if (lv_slider_get_mode(ui_SliderBrightness)==LV_SLIDER_MODE_RANGE ) lv_slider_se
 lv_obj_set_height( ui_SliderBrightness, 14);
 lv_obj_set_width( ui_SliderBrightness, lv_pct(98));
 lv_obj_set_x( ui_SliderBrightness, 0 );
-lv_obj_set_y( ui_SliderBrightness, 12 );
+lv_obj_set_y( ui_SliderBrightness, -26 );
 lv_obj_set_align( ui_SliderBrightness, LV_ALIGN_CENTER );
 lv_obj_set_style_bg_color(ui_SliderBrightness, lv_color_hex(0x1F201E), LV_PART_MAIN | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_opa(ui_SliderBrightness, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -61,21 +88,34 @@ lv_obj_set_style_bg_grad_dir(ui_SliderBrightness, LV_GRAD_DIR_HOR, LV_PART_INDIC
 lv_obj_set_style_bg_color(ui_SliderBrightness, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT );
 lv_obj_set_style_bg_opa(ui_SliderBrightness, 255, LV_PART_KNOB| LV_STATE_DEFAULT);
 
-ui_VarBrightness = lv_label_create(ui_PanelBrightness);
-lv_obj_set_width( ui_VarBrightness, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_VarBrightness, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_VarBrightness, -6 );
-lv_obj_set_y( ui_VarBrightness, -17 );
-lv_obj_set_align( ui_VarBrightness, LV_ALIGN_CENTER );
-lv_label_set_text(ui_VarBrightness,"BACKLIGHT: ");
-lv_obj_set_style_text_font(ui_VarBrightness, &lv_font_montserrat_18, LV_PART_MAIN| LV_STATE_DEFAULT);
+ui_VarSleepTimer = lv_label_create(ui_PanelBrightness);
+lv_obj_set_width( ui_VarSleepTimer, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_VarSleepTimer, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_x( ui_VarSleepTimer, 0 );
+lv_obj_set_y( ui_VarSleepTimer, 17 );
+lv_obj_set_align( ui_VarSleepTimer, LV_ALIGN_CENTER );
+lv_label_set_text(ui_VarSleepTimer,"Sleep after: 50 s");
+lv_obj_set_style_text_font(ui_VarSleepTimer, &lv_font_montserrat_18, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_SliderSleepTimer = lv_slider_create(ui_PanelBrightness);
+lv_slider_set_range(ui_SliderSleepTimer, 0,200);
+lv_slider_set_value( ui_SliderSleepTimer, 50, LV_ANIM_OFF);
+if (lv_slider_get_mode(ui_SliderSleepTimer)==LV_SLIDER_MODE_RANGE ) lv_slider_set_left_value( ui_SliderSleepTimer, 0, LV_ANIM_OFF);
+lv_obj_set_height( ui_SliderSleepTimer, 14);
+lv_obj_set_width( ui_SliderSleepTimer, lv_pct(98));
+lv_obj_set_x( ui_SliderSleepTimer, 0 );
+lv_obj_set_y( ui_SliderSleepTimer, 47 );
+lv_obj_set_align( ui_SliderSleepTimer, LV_ALIGN_CENTER );
+
+lv_obj_set_style_bg_color(ui_SliderSleepTimer, lv_color_hex(0xFFFFFF), LV_PART_KNOB | LV_STATE_DEFAULT );
+lv_obj_set_style_bg_opa(ui_SliderSleepTimer, 255, LV_PART_KNOB| LV_STATE_DEFAULT);
 
 ui_Settings_DropdownFanControll = lv_dropdown_create(ui_Settings);
 lv_dropdown_set_options( ui_Settings_DropdownFanControll, "FAN AUTO\nFAN FULL POWER" );
 lv_obj_set_width( ui_Settings_DropdownFanControll, lv_pct(48));
 lv_obj_set_height( ui_Settings_DropdownFanControll, lv_pct(8));
-lv_obj_set_x( ui_Settings_DropdownFanControll, -77 );
-lv_obj_set_y( ui_Settings_DropdownFanControll, -140 );
+lv_obj_set_x( ui_Settings_DropdownFanControll, -78 );
+lv_obj_set_y( ui_Settings_DropdownFanControll, -81 );
 lv_obj_set_align( ui_Settings_DropdownFanControll, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_Settings_DropdownFanControll, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 lv_obj_set_style_text_font(ui_Settings_DropdownFanControll, &lv_font_montserrat_20, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -87,27 +127,18 @@ lv_obj_set_style_border_color(lv_dropdown_get_list(ui_Settings_DropdownFanContro
 lv_obj_set_style_border_opa(lv_dropdown_get_list(ui_Settings_DropdownFanControll), 255,  LV_PART_MAIN| LV_STATE_DEFAULT);
 
 ui_Settings_TextAreaLogs = lv_textarea_create(ui_Settings);
-lv_obj_set_height( ui_Settings_TextAreaLogs, 246);
+lv_obj_set_height( ui_Settings_TextAreaLogs, 220);
 lv_obj_set_width( ui_Settings_TextAreaLogs, lv_pct(98));
 lv_obj_set_x( ui_Settings_TextAreaLogs, 0 );
 lv_obj_set_y( ui_Settings_TextAreaLogs, -77 );
 lv_obj_set_align( ui_Settings_TextAreaLogs, LV_ALIGN_BOTTOM_MID );
 lv_obj_set_style_text_font(ui_Settings_TextAreaLogs, &lv_font_montserrat_12, LV_PART_MAIN| LV_STATE_DEFAULT);
 
-ui_Settings_Label7 = lv_label_create(ui_Settings);
-lv_obj_set_width( ui_Settings_Label7, LV_SIZE_CONTENT);  /// 1
-lv_obj_set_height( ui_Settings_Label7, LV_SIZE_CONTENT);   /// 1
-lv_obj_set_x( ui_Settings_Label7, 0 );
-lv_obj_set_y( ui_Settings_Label7, -99 );
-lv_obj_set_align( ui_Settings_Label7, LV_ALIGN_CENTER );
-lv_label_set_text(ui_Settings_Label7,"LOGS");
-lv_obj_set_style_text_font(ui_Settings_Label7, &lv_font_montserrat_20, LV_PART_MAIN| LV_STATE_DEFAULT);
-
 ui_ButtonResetEnergy = lv_btn_create(ui_Settings);
 lv_obj_set_width( ui_ButtonResetEnergy, lv_pct(48));
 lv_obj_set_height( ui_ButtonResetEnergy, lv_pct(8));
-lv_obj_set_x( ui_ButtonResetEnergy, 80 );
-lv_obj_set_y( ui_ButtonResetEnergy, -140 );
+lv_obj_set_x( ui_ButtonResetEnergy, 77 );
+lv_obj_set_y( ui_ButtonResetEnergy, -82 );
 lv_obj_set_align( ui_ButtonResetEnergy, LV_ALIGN_CENTER );
 lv_obj_add_flag( ui_ButtonResetEnergy, LV_OBJ_FLAG_SCROLL_ON_FOCUS );   /// Flags
 lv_obj_clear_flag( ui_ButtonResetEnergy, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
@@ -125,10 +156,14 @@ lv_label_set_text(ui_LabelResetEnergy,"RESET ENERGY");
 lv_obj_set_style_text_font(ui_LabelResetEnergy, &lv_font_montserrat_18, LV_PART_MAIN| LV_STATE_DEFAULT);
 
 lv_obj_add_event_cb(ui_SliderBrightness, ui_event_SliderBrightness, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_VarSleepTimer, ui_event_VarSleepTimer, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_SliderSleepTimer, ui_event_SliderSleepTimer, LV_EVENT_ALL, NULL);
 uic_Settings = ui_Settings;
 uic_PanelBrightness = ui_PanelBrightness;
-uic_SliderBrightness = ui_SliderBrightness;
 uic_VarBrightness = ui_VarBrightness;
+uic_SliderBrightness = ui_SliderBrightness;
+uic_VarSleepTimer = ui_VarSleepTimer;
+uic_SliderSleepTimer = ui_SliderSleepTimer;
 uic_Settings_DropdownFanControll = ui_Settings_DropdownFanControll;
 uic_Settings_TextAreaLogs = ui_Settings_TextAreaLogs;
 uic_ButtonResetEnergy = ui_ButtonResetEnergy;
@@ -146,15 +181,18 @@ ui_Settings= NULL;
 ui_ScreenButtons3= NULL;
 uic_PanelBrightness= NULL;
 ui_PanelBrightness= NULL;
-uic_SliderBrightness= NULL;
-ui_SliderBrightness= NULL;
 uic_VarBrightness= NULL;
 ui_VarBrightness= NULL;
+uic_SliderBrightness= NULL;
+ui_SliderBrightness= NULL;
+uic_VarSleepTimer= NULL;
+ui_VarSleepTimer= NULL;
+uic_SliderSleepTimer= NULL;
+ui_SliderSleepTimer= NULL;
 uic_Settings_DropdownFanControll= NULL;
 ui_Settings_DropdownFanControll= NULL;
 uic_Settings_TextAreaLogs= NULL;
 ui_Settings_TextAreaLogs= NULL;
-ui_Settings_Label7= NULL;
 uic_ButtonResetEnergy= NULL;
 ui_ButtonResetEnergy= NULL;
 uic_LabelResetEnergy= NULL;

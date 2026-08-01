@@ -51,8 +51,8 @@ void handle_can_and_ui() {
         ui_set_text_safe(ui_VarVin, "--");
         ui_set_text_safe(ui_VarIin, "--");
         ui_set_text_safe(ui_VarPin, "--");
-        ui_set_text_safe(ui_VarInputTemp, "--");
-        ui_set_text_safe(ui_VarOutputTemp, "--");
+        ui_set_text_safe(ui_VarTin, "--");
+        ui_set_text_safe(ui_VarTout, "--");
         ui_set_text_safe(ui_VarEffi, "--");
         ui_set_text_safe(ui_VarFin, "--");
         ui_set_text_safe(ui_VarOutputState, "NO LINK");
@@ -83,12 +83,12 @@ void handle_can_and_ui() {
 
     if (status.inputTemp > -50.0f && status.inputTemp < 150.0f) {
         snprintf(valBuffer, sizeof(valBuffer), "%.1f", status.inputTemp);
-        ui_set_text_safe(ui_VarInputTemp, valBuffer);
+        ui_set_text_safe(ui_VarTin, valBuffer);
     }
 
     if (status.outputTemp > -50.0f && status.outputTemp < 150.0f) {
         snprintf(valBuffer, sizeof(valBuffer), "%.1f", status.outputTemp);
-        ui_set_text_safe(ui_VarOutputTemp, valBuffer);
+        ui_set_text_safe(ui_VarTout, valBuffer);
     }
 
     if (status.inputVoltage > 0.0f) {

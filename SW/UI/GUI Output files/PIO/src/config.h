@@ -27,6 +27,13 @@
 #define DEFAULT_DIM_TIMEOUT_MS   30000UL
 #define DEFAULT_OFF_TIMEOUT_MS   60000UL
 
+/* Sleep-timeout slider bounds (ui_SliderSleepTimer, Settings screen).
+   0 means "never sleep" -- handle_backlight() treats an off_timeout_ms
+   of 0 as disabled. Keep in sync with the slider's range set in
+   ui_Settings.c (SquareLine Studio). */
+#define SLEEP_SEC_MIN   0
+#define SLEEP_SEC_MAX   200
+
 /* =========================================================
    DISPLAY / LVGL
    ========================================================= */

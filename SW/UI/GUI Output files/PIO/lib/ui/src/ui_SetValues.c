@@ -5,6 +5,9 @@
 
 #include "ui.h"
 
+lv_obj_t *uic_SetValues_SwitchTimer;
+lv_obj_t *uic_SetValues_TextAreaTimer;
+lv_obj_t *uic_SetValues_PanelTimer;
 lv_obj_t *uic_Numpad;
 lv_obj_t *uic_UniIout1;
 lv_obj_t *uic_VarOfflineIout;
@@ -19,7 +22,7 @@ lv_obj_t *uic_ContSetOnVout;
 lv_obj_t *uic_LablSetOnlineOutput;
 lv_obj_t *uic_PanlSetOnlineOutput;
 lv_obj_t *uic_SetValues;
-lv_obj_t *ui_SetValues = NULL;lv_obj_t *ui_ScreenButtons2 = NULL;lv_obj_t *ui_PanlSetOnlineOutput = NULL;lv_obj_t *ui_LablSetOnlineOutput = NULL;lv_obj_t *ui_LablSetOnlineOutput1 = NULL;lv_obj_t *ui_ContSetOnVout = NULL;lv_obj_t *ui_LabSetOnVout = NULL;lv_obj_t *ui_VarOnlineVout = NULL;lv_obj_t *ui_VarOfflineVout = NULL;lv_obj_t *ui_UniVout1 = NULL;lv_obj_t *ui_ContSetOnIout = NULL;lv_obj_t *ui_LabSetOnIout = NULL;lv_obj_t *ui_VarOnlineIout = NULL;lv_obj_t *ui_VarOfflineIout = NULL;lv_obj_t *ui_UniIout1 = NULL;lv_obj_t *ui_SetValues_TextArea2 = NULL;lv_obj_t *ui_Numpad = NULL;
+lv_obj_t *ui_SetValues = NULL;lv_obj_t *ui_ScreenButtons2 = NULL;lv_obj_t *ui_PanlSetOnlineOutput = NULL;lv_obj_t *ui_LablSetOnlineOutput = NULL;lv_obj_t *ui_LablSetOnlineOutput1 = NULL;lv_obj_t *ui_ContSetOnVout = NULL;lv_obj_t *ui_LabSetOnVout = NULL;lv_obj_t *ui_VarOnlineVout = NULL;lv_obj_t *ui_VarOfflineVout = NULL;lv_obj_t *ui_UniVout1 = NULL;lv_obj_t *ui_ContSetOnIout = NULL;lv_obj_t *ui_LabSetOnIout = NULL;lv_obj_t *ui_VarOnlineIout = NULL;lv_obj_t *ui_VarOfflineIout = NULL;lv_obj_t *ui_UniIout1 = NULL;lv_obj_t *ui_SetValues_TextArea2 = NULL;lv_obj_t *ui_Numpad = NULL;lv_obj_t *ui_SetValues_PanelTimer = NULL;lv_obj_t *ui_SetValues_Label1 = NULL;lv_obj_t *ui_SetValues_TextAreaTimer = NULL;lv_obj_t *ui_SetValues_SwitchTimer = NULL;
 // event funtions
 void ui_event_VarOnlineVout( lv_event_t * e) {
     lv_event_code_t event_code = lv_event_get_code(e);
@@ -65,6 +68,15 @@ if ( event_code == LV_EVENT_READY) {
 }
 }
 
+void ui_event_SetValues_TextAreaTimer( lv_event_t * e) {
+    lv_event_code_t event_code = lv_event_get_code(e);
+
+if ( event_code == LV_EVENT_CLICKED) {
+      _ui_keyboard_set_target(ui_Numpad,  ui_SetValues_TextAreaTimer);
+      _ui_flag_modify( ui_Numpad, LV_OBJ_FLAG_HIDDEN, _UI_MODIFY_FLAG_REMOVE);
+}
+}
+
 // build funtions
 
 void ui_SetValues_screen_init(void)
@@ -78,7 +90,7 @@ lv_obj_set_y( ui_ScreenButtons2, -2 );
 
 ui_PanlSetOnlineOutput = lv_obj_create(ui_SetValues);
 lv_obj_set_width( ui_PanlSetOnlineOutput, lv_pct(100));
-lv_obj_set_height( ui_PanlSetOnlineOutput, lv_pct(40));
+lv_obj_set_height( ui_PanlSetOnlineOutput, lv_pct(31));
 lv_obj_set_align( ui_PanlSetOnlineOutput, LV_ALIGN_TOP_MID );
 lv_obj_set_flex_flow(ui_PanlSetOnlineOutput,LV_FLEX_FLOW_COLUMN);
 lv_obj_set_flex_align(ui_PanlSetOnlineOutput, LV_FLEX_ALIGN_SPACE_AROUND, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
@@ -89,6 +101,8 @@ ui_object_set_themeable_style_property(ui_PanlSetOnlineOutput, LV_PART_MAIN| LV_
 ui_LablSetOnlineOutput = lv_label_create(ui_PanlSetOnlineOutput);
 lv_obj_set_width( ui_LablSetOnlineOutput, lv_pct(62));
 lv_obj_set_height( ui_LablSetOnlineOutput, LV_SIZE_CONTENT);   /// 10
+lv_obj_set_x( ui_LablSetOnlineOutput, 1 );
+lv_obj_set_y( ui_LablSetOnlineOutput, -48 );
 lv_obj_set_align( ui_LablSetOnlineOutput, LV_ALIGN_CENTER );
 lv_label_set_text(ui_LablSetOnlineOutput,"   SET  OUTPUTS");
 lv_obj_set_style_text_font(ui_LablSetOnlineOutput, &lv_font_montserrat_20, LV_PART_MAIN| LV_STATE_DEFAULT);
@@ -121,7 +135,7 @@ lv_obj_set_style_text_font(ui_LabSetOnVout, &lv_font_montserrat_20, LV_PART_MAIN
 
 ui_VarOnlineVout = lv_textarea_create(ui_ContSetOnVout);
 lv_obj_set_width( ui_VarOnlineVout, 98);
-lv_obj_set_height( ui_VarOnlineVout, LV_SIZE_CONTENT);   /// 60
+lv_obj_set_height( ui_VarOnlineVout, LV_SIZE_CONTENT);   /// 50
 lv_obj_set_x( ui_VarOnlineVout, -40 );
 lv_obj_set_y( ui_VarOnlineVout, 0 );
 lv_obj_set_align( ui_VarOnlineVout, LV_ALIGN_CENTER );
@@ -229,11 +243,44 @@ lv_obj_add_flag( ui_Numpad, LV_OBJ_FLAG_HIDDEN );   /// Flags
 lv_obj_set_style_radius(ui_Numpad, 10, LV_PART_ITEMS| LV_STATE_DEFAULT);
 lv_obj_set_style_text_font(ui_Numpad, &lv_font_montserrat_20, LV_PART_ITEMS| LV_STATE_DEFAULT);
 
+ui_SetValues_PanelTimer = lv_obj_create(ui_SetValues);
+lv_obj_set_height( ui_SetValues_PanelTimer, 44);
+lv_obj_set_width( ui_SetValues_PanelTimer, lv_pct(98));
+lv_obj_set_x( ui_SetValues_PanelTimer, 0 );
+lv_obj_set_y( ui_SetValues_PanelTimer, -67 );
+lv_obj_set_align( ui_SetValues_PanelTimer, LV_ALIGN_CENTER );
+lv_obj_set_flex_flow(ui_SetValues_PanelTimer,LV_FLEX_FLOW_ROW);
+lv_obj_set_flex_align(ui_SetValues_PanelTimer, LV_FLEX_ALIGN_SPACE_BETWEEN, LV_FLEX_ALIGN_CENTER, LV_FLEX_ALIGN_CENTER);
+lv_obj_clear_flag( ui_SetValues_PanelTimer, LV_OBJ_FLAG_SCROLLABLE );    /// Flags
+
+ui_SetValues_Label1 = lv_label_create(ui_SetValues_PanelTimer);
+lv_obj_set_width( ui_SetValues_Label1, LV_SIZE_CONTENT);  /// 1
+lv_obj_set_height( ui_SetValues_Label1, LV_SIZE_CONTENT);   /// 1
+lv_obj_set_align( ui_SetValues_Label1, LV_ALIGN_CENTER );
+lv_label_set_text(ui_SetValues_Label1,"Timer:");
+
+ui_SetValues_TextAreaTimer = lv_textarea_create(ui_SetValues_PanelTimer);
+lv_obj_set_width( ui_SetValues_TextAreaTimer, 150);
+lv_obj_set_height( ui_SetValues_TextAreaTimer, LV_SIZE_CONTENT);   /// 70
+lv_obj_set_align( ui_SetValues_TextAreaTimer, LV_ALIGN_CENTER );
+lv_textarea_set_placeholder_text(ui_SetValues_TextAreaTimer,"HH.MM.SS");
+lv_textarea_set_one_line(ui_SetValues_TextAreaTimer,true);
+lv_obj_set_style_outline_color(ui_SetValues_TextAreaTimer, lv_color_hex(0xFFFFFF), LV_PART_MAIN | LV_STATE_DEFAULT );
+lv_obj_set_style_outline_opa(ui_SetValues_TextAreaTimer, 255, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_outline_width(ui_SetValues_TextAreaTimer, 2, LV_PART_MAIN| LV_STATE_DEFAULT);
+lv_obj_set_style_outline_pad(ui_SetValues_TextAreaTimer, 0, LV_PART_MAIN| LV_STATE_DEFAULT);
+
+ui_SetValues_SwitchTimer = lv_switch_create(ui_SetValues_PanelTimer);
+lv_obj_set_width( ui_SetValues_SwitchTimer, 67);
+lv_obj_set_height( ui_SetValues_SwitchTimer, 25);
+lv_obj_set_align( ui_SetValues_SwitchTimer, LV_ALIGN_CENTER );
+
 lv_obj_add_event_cb(ui_VarOnlineVout, ui_event_VarOnlineVout, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_VarOfflineVout, ui_event_VarOfflineVout, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_VarOnlineIout, ui_event_VarOnlineIout, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_VarOfflineIout, ui_event_VarOfflineIout, LV_EVENT_ALL, NULL);
 lv_obj_add_event_cb(ui_Numpad, ui_event_Numpad, LV_EVENT_ALL, NULL);
+lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, ui_event_SetValues_TextAreaTimer, LV_EVENT_ALL, NULL);
 uic_SetValues = ui_SetValues;
 uic_PanlSetOnlineOutput = ui_PanlSetOnlineOutput;
 uic_LablSetOnlineOutput = ui_LablSetOnlineOutput;
@@ -248,6 +295,9 @@ uic_VarOnlineIout = ui_VarOnlineIout;
 uic_VarOfflineIout = ui_VarOfflineIout;
 uic_UniIout1 = ui_UniIout1;
 uic_Numpad = ui_Numpad;
+uic_SetValues_PanelTimer = ui_SetValues_PanelTimer;
+uic_SetValues_TextAreaTimer = ui_SetValues_TextAreaTimer;
+uic_SetValues_SwitchTimer = ui_SetValues_SwitchTimer;
 
 }
 
@@ -287,5 +337,12 @@ ui_UniIout1= NULL;
 ui_SetValues_TextArea2= NULL;
 uic_Numpad= NULL;
 ui_Numpad= NULL;
+uic_SetValues_PanelTimer= NULL;
+ui_SetValues_PanelTimer= NULL;
+ui_SetValues_Label1= NULL;
+uic_SetValues_TextAreaTimer= NULL;
+ui_SetValues_TextAreaTimer= NULL;
+uic_SetValues_SwitchTimer= NULL;
+ui_SetValues_SwitchTimer= NULL;
 
 }

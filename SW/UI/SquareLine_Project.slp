@@ -1,6 +1,6 @@
 {
-    "uiExportFolderPath": "C:/Users/jhalim/Documents/Projects/R4875G1_CAN_Controller/SW/UI/3.5inch_R4875G1_CAN_controller/SquareLine_Project/./libraries/ui/src",
-    "projectExportFolderPath": "C:/Users/jhalim/Documents/Projects/R4875G1_CAN_Controller/SW/UI/3.5inch_R4875G1_CAN_controller/SquareLine_Project",
+    "uiExportFolderPath": "/Users/jawedhakimi/Documents/Projects/R4875G1-ESP32-CAN-controller/SW/UI/GUI Output files/PIO/lib/ui/src",
+    "projectExportFolderPath": "/Users/jawedhakimi/Documents/Projects/R4875G1-ESP32-CAN-controller/SW/UI",
     "drive_stdio": "-",
     "drive_stdio_path": "",
     "drive_posix": "-",

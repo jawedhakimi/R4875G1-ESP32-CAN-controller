@@ -51,6 +51,8 @@ void handle_can_and_ui() {
         ui_set_text_safe(ui_VarVin, "--");
         ui_set_text_safe(ui_VarIin, "--");
         ui_set_text_safe(ui_VarPin, "--");
+        ui_set_text_safe(ui_VarTin, "--");
+        ui_set_text_safe(ui_VarTout, "--");
         ui_set_text_safe(ui_VarEffi, "--");
         ui_set_text_safe(ui_VarFin, "--");
         ui_set_text_safe(ui_VarOutputState, "NO LINK");
@@ -79,10 +81,19 @@ void handle_can_and_ui() {
         ui_set_text_safe(ui_VarPout, valBuffer);
     }
 
-    // NOTE: ui_VarInputTemp / ui_VarOutputTemp (separate Home-screen temp
-    // fields) no longer exist in the current UI -- nothing to wire up here.
-    // status.inputTemp / .outputTemp are still decoded and visible via the
-    // serial console's "s" command.
+    // PSU-reported temperatures (Home screen T1/T2 fields, re-added in the
+    // current SquareLine UI). Sanity-bounded the same way the rest of the
+    // decoded fields are, to avoid flashing a garbage reading on a glitchy
+    // CAN frame.
+    if (status.inputTemp > -50.0f && status.inputTemp < 150.0f) {
+        snprintf(valBuffer, sizeof(valBuffer), "%.1f", status.inputTemp);
+        ui_set_text_safe(ui_VarTin, valBuffer);
+    }
+
+    if (status.outputTemp > -50.0f && status.outputTemp < 150.0f) {
+        snprintf(valBuffer, sizeof(valBuffer), "%.1f", status.outputTemp);
+        ui_set_text_safe(ui_VarTout, valBuffer);
+    }
 
     if (status.inputVoltage > 0.0f) {
         snprintf(valBuffer, sizeof(valBuffer), "%.2f", status.inputVoltage);

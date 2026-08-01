@@ -11,7 +11,7 @@ bool parse_hms_string(const String &input, uint32_t &outSeconds);
    zero. Call every loop. */
 void handle_psu_timer();
 
-/* Registers the timer text field + "use timer" checkbox event callbacks.
+/* Registers the timer text field + "use timer" slide switch event callbacks.
    Call once from setup(). */
 void psu_timer_register_callbacks();
 

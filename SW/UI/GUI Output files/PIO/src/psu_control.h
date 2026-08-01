@@ -8,8 +8,8 @@ float clampf(float x, float lo, float hi);
 void apply_saved_psu_settings();
 
 /* Reflects saved_* settings into the on-screen widgets (voltage/current
-   fields, brightness label+slider, sleep field, timer field, energy,
-   "use timer" checkbox). Call once at boot, after ui_init(). */
+   fields, brightness label+slider, sleep label+slider, timer field, energy,
+   "use timer" switch). Call once at boot, after ui_init(). */
 void save_current_settings_to_ui();
 
 /* Registers the voltage/current text fields, output switch and fan

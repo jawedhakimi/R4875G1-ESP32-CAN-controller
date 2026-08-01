@@ -17,7 +17,7 @@ extern unsigned long last_activity_time;
    reflected. --- */
 extern bool suppress_switch_event;
 extern bool suppress_fan_event;
-extern bool suppress_timer_checkbox_event;
+extern bool suppress_timer_switch_event;
 
 /* --- persisted user settings (mirrors of NVS, loaded at boot by
    prefs_load_all()) --- */

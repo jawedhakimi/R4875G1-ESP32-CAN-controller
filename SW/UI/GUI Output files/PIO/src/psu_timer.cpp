@@ -75,8 +75,8 @@ void handle_psu_timer() {
             timer_remaining_seconds--;
         }
 
-        if (ui_SetValues_TextAreaVarTimer && obj_is_textarea(ui_SetValues_TextAreaVarTimer)) {
-            ui_set_text_safe(ui_SetValues_TextAreaVarTimer, format_hms(timer_remaining_seconds).c_str());
+        if (ui_SetValues_TextAreaTimer && obj_is_textarea(ui_SetValues_TextAreaTimer)) {
+            ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(timer_remaining_seconds).c_str());
         }
 
         if (timer_remaining_seconds == 0) {
@@ -109,7 +109,7 @@ static void timer_setting_cb(lv_event_t *e) {
 
     if (!parse_hms_string(text, secs)) {
         log_to_settings("Invalid timer format. Use HH.MM.SS");
-        ui_set_text_safe(ui_SetValues_TextAreaVarTimer, format_hms(saved_timer_seconds).c_str());
+        ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(saved_timer_seconds).c_str());
         return;
     }
 
@@ -119,7 +119,7 @@ static void timer_setting_cb(lv_event_t *e) {
     last_timer_tick_ms = millis();
 
     save_uint_pref("timer_sec", saved_timer_seconds);
-    ui_set_text_safe(ui_SetValues_TextAreaVarTimer, format_hms(saved_timer_seconds).c_str());
+    ui_set_text_safe(ui_SetValues_TextAreaTimer, format_hms(saved_timer_seconds).c_str());
 
     if (saved_timer_seconds == 0) {
         log_to_settings("Timer disabled (00.00.00)");
@@ -130,13 +130,13 @@ static void timer_setting_cb(lv_event_t *e) {
     last_activity_time = millis();
 }
 
-static void timer_checkbox_cb(lv_event_t *e) {
-    if (suppress_timer_checkbox_event) return;
+static void timer_switch_cb(lv_event_t *e) {
+    if (suppress_timer_switch_event) return;
 
-    lv_obj_t *cb = lv_event_get_target(e);
-    if (!cb) return;
+    lv_obj_t *sw = lv_event_get_target(e);
+    if (!sw) return;
 
-    bool checked = lv_obj_has_state(cb, LV_STATE_CHECKED);
+    bool checked = lv_obj_has_state(sw, LV_STATE_CHECKED);
     saved_use_timer = checked;
     save_bool_pref("use_timer", saved_use_timer);
 
@@ -154,14 +154,14 @@ static void timer_checkbox_cb(lv_event_t *e) {
 }
 
 void psu_timer_register_callbacks() {
-    if (ui_SetValues_TextAreaVarTimer) {
-        lv_obj_add_event_cb(ui_SetValues_TextAreaVarTimer, timer_setting_cb, LV_EVENT_READY, NULL);
-        lv_obj_add_event_cb(ui_SetValues_TextAreaVarTimer, user_beep_cb, LV_EVENT_FOCUSED, NULL);
-        lv_obj_add_event_cb(ui_SetValues_TextAreaVarTimer, user_beep_cb, LV_EVENT_READY, NULL);
+    if (ui_SetValues_TextAreaTimer) {
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, timer_setting_cb, LV_EVENT_READY, NULL);
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, user_beep_cb, LV_EVENT_FOCUSED, NULL);
+        lv_obj_add_event_cb(ui_SetValues_TextAreaTimer, user_beep_cb, LV_EVENT_READY, NULL);
     }
 
-    if (ui_SetValues_CheckboxUseTimer) {
-        lv_obj_add_event_cb(ui_SetValues_CheckboxUseTimer, timer_checkbox_cb, LV_EVENT_VALUE_CHANGED, NULL);
-        lv_obj_add_event_cb(ui_SetValues_CheckboxUseTimer, user_beep_cb, LV_EVENT_VALUE_CHANGED, NULL);
+    if (ui_SetValues_SwitchTimer) {
+        lv_obj_add_event_cb(ui_SetValues_SwitchTimer, timer_switch_cb, LV_EVENT_VALUE_CHANGED, NULL);
+        lv_obj_add_event_cb(ui_SetValues_SwitchTimer, user_beep_cb, LV_EVENT_VALUE_CHANGED, NULL);
     }
 }

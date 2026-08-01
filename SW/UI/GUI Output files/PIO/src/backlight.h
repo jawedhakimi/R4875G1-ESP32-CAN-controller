@@ -19,7 +19,7 @@ void handle_backlight();
    Used by touch_input.cpp to implement wake-on-touch. */
 bool backlight_is_asleep();
 
-/* Register the brightness slider + sleep-timeout textarea event callbacks.
+/* Register the brightness slider + sleep-timeout slider event callbacks.
    Call once from setup(). */
 void backlight_register_callbacks();
 

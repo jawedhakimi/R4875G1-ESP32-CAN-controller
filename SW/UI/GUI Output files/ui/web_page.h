@@ -12,7 +12,7 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Huawei PSU Control</title>
+<title>Huawei PSU Control by Jawed Hakimi</title>
 <style>
   :root { color-scheme: dark; }
   * { box-sizing: border-box; }
@@ -20,17 +20,23 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     background: #14161a; color: #eaeaea; margin: 0; padding: 16px;
   }
-  h1 { font-size: 1.3em; margin: 0 0 4px; }
+  h1 { font-size: 1.3em; margin: 0 0 2px; }
+  .byline { font-size: 0.75em; color: #6c7480; margin: 0 0 6px; }
   .sub { color: #8a8f98; font-size: 0.85em; margin-bottom: 16px; }
-  .card {
-    background: #1f2228; border-radius: 12px; padding: 14px 16px;
-    margin-bottom: 12px; border: 1px solid #2c3038;
+  .link-btn {
+    background: none; border: none; color: #6c7480; font-size: 0.85em;
+    text-decoration: underline; cursor: pointer; padding: 0; margin-left: 12px;
   }
-  .card h2 {
-    font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.04em;
-    color: #9aa3b2; margin: 0 0 10px;
-  }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
+  .link-btn:hover { color: #9aa3b2; }
+  /* Output lives in the page header (top right), not its own window --
+     it's the one control someone needs instant access/visibility to
+     regardless of how the rest of the windows get rearranged. Timer and
+     Fan are back in their own windows alongside Setpoints/Telemetry. */
+  .page-header { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px; }
+  .header-controls { display: flex; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 4px; }
+  .output-toggle { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+  .output-toggle #outState { font-size: 0.95em; color: #9aa3b2; min-width: 95px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 10px; }
   .stat { background: #14161a; border-radius: 8px; padding: 8px 10px; }
   .stat .v { font-size: 1.3em; font-weight: 600; }
   .stat .l { font-size: 0.75em; color: #8a8f98; }
@@ -48,14 +54,64 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
   }
   button:active { background: #2f52cc; }
   button.danger { background: #d9455a; }
-  button.toggle-off { background: #3a3f4a; }
   .link-ok { color: #4fd979; }
   .link-bad { color: #d9455a; }
-  .card h2 .hint { text-transform: none; letter-spacing: normal; color: #5c6270; font-size: 0.9em; }
-  .layout { display: grid; grid-template-columns: 1fr 4fr; gap: 16px; align-items: start; }
-  @media (max-width: 800px) {
-    .layout { grid-template-columns: 1fr; }
+
+  /* Output control: a plain button (not a slide switch) plus its own
+     always-visible state text -- the button's label stays a constant
+     "Toggle" and never needs decoding, the state is unambiguous from
+     #outState, and the button recolors as a secondary at-a-glance cue. */
+  #outBtn.state-on { background: #4fd979; color: #14161a; }
+  #outBtn.state-off { background: #3a3f4a; }
+
+  /* Small "Reset" button that sits directly next to the Energy stat's
+     value, inside the same tile as the rest of the Live Telemetry
+     numbers, rather than as a separate full-size row/button below. */
+  .stat .v-row { display: flex; align-items: baseline; gap: 8px; }
+  .reset-inline {
+    background: #d9455a; color: white; border: none; border-radius: 5px;
+    padding: 2px 8px; font-size: 0.65em; cursor: pointer; flex-shrink: 0;
   }
+  .reset-inline:active { background: #b8394b; }
+
+  /* ---------------------------------------------------------------------
+     Window manager -- every panel is a freely movable, resizable "window"
+     positioned absolutely inside #desktop. See the "Window manager"
+     script block near the end for the drag/resize/persistence logic.
+     --------------------------------------------------------------------- */
+  #desktop { position: relative; width: 100%; }
+  .win {
+    position: absolute;
+    background: #1f2228; border: 1px solid #2c3038; border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    display: flex; flex-direction: column; overflow: hidden;
+    min-width: 240px; min-height: 140px;
+  }
+  .win-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px; background: #23262d; border-bottom: 1px solid #2c3038;
+    cursor: grab; user-select: none; touch-action: none; flex-shrink: 0;
+  }
+  .win-titlebar:active { cursor: grabbing; }
+  .win-title {
+    font-size: 0.95em; text-transform: uppercase; letter-spacing: 0.04em;
+    color: #9aa3b2; font-weight: 600;
+  }
+  .win-title .hint {
+    text-transform: none; letter-spacing: normal; color: #5c6270;
+    font-size: 0.9em; font-weight: 400;
+  }
+  .win-body { padding: 14px 16px; overflow: auto; flex: 1; min-height: 0; }
+  .win-body.flex-col { display: flex; flex-direction: column; }
+  .win-resize {
+    position: absolute; right: 0; bottom: 0; width: 20px; height: 20px;
+    cursor: nwse-resize; touch-action: none;
+  }
+  .win-resize::before {
+    content: ""; position: absolute; right: 5px; bottom: 5px; width: 8px; height: 8px;
+    border-right: 2px solid #4a5162; border-bottom: 2px solid #4a5162;
+  }
+
   .var-palette { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
   .var-chip {
     display: flex; align-items: center; gap: 6px;
@@ -66,14 +122,14 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
   .var-chip.active { border-color: #565d6b; background: #1a1d24; }
   .var-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .var-chip b { font-weight: 600; }
-  .big-chart-wrap { position: relative; border-radius: 8px; overflow: hidden; }
-  .big-chart { width: 100%; height: 440px; display: block; background: #14161a; }
+  .big-chart-wrap { position: relative; border-radius: 8px; overflow: hidden; flex: 1; min-height: 140px; }
+  .big-chart { width: 100%; height: 100%; display: block; background: #14161a; }
   .big-chart-wrap.dragover { outline: 2px dashed #3d6bff; outline-offset: -2px; }
   .empty-hint {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
     color: #5c6270; font-size: 0.9em; pointer-events: none; text-align: center;
   }
-  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; flex-shrink: 0; }
   .legend-chip {
     display: flex; align-items: center; gap: 6px;
     background: #14161a; border-radius: 20px; padding: 6px 8px 6px 12px; font-size: 0.8em;
@@ -91,30 +147,43 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
     padding: 8px 14px; font-size: 0.85em; cursor: pointer;
   }
   .curve-toggle button.active { background: #3d6bff; color: white; }
-  .profile-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
-  .profile-chart-wrap { position: relative; border-radius: 8px; overflow: hidden; }
-  .profile-chart { width: 100%; height: 320px; display: block; background: #14161a; cursor: crosshair; touch-action: none; }
+  .profile-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; flex-shrink: 0; }
+  .profile-hint { color: #8a8f98; font-size: 0.85em; margin-bottom: 8px; flex-shrink: 0; }
+  .profile-chart-wrap { position: relative; border-radius: 8px; overflow: hidden; flex: 1; min-height: 140px; }
+  .profile-chart { width: 100%; height: 100%; display: block; background: #14161a; cursor: crosshair; touch-action: none; }
   .profile-chart-wrap.running .profile-chart { cursor: default; opacity: 0.85; }
-  .profile-status { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.85em; color: #9aa3b2; }
+  .profile-status { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.85em; color: #9aa3b2; flex-shrink: 0; }
   .profile-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #5c6270; }
   .profile-status.running .dot { background: #4fd979; }
   #toast {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     background: #2c3038; padding: 8px 16px; border-radius: 8px; font-size: 0.85em;
-    opacity: 0; transition: opacity 0.3s; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 9999;
   }
   #toast.show { opacity: 1; }
 </style>
 </head>
 <body>
 
-<h1>Huawei PSU Control</h1>
-<div class="sub">CAN link: <span id="link">--</span></div>
+<div class="page-header">
+  <div>
+    <h1>Huawei PSU Control</h1>
+    <div class="byline">by Jawed Hakimi</div>
+    <div class="sub">CAN link: <span id="link">--</span><button class="link-btn" onclick="saveLayoutManual()">Save window layout</button><button class="link-btn" onclick="resetLayout()">Reset window layout</button></div>
+  </div>
+  <div class="header-controls">
+    <div class="output-toggle">
+      <span id="outState">Output: --</span>
+      <button id="outBtn" onclick="toggleOutput()">Toggle</button>
+    </div>
+  </div>
+</div>
 
-<div class="layout">
-  <div class="sidebar">
-    <div class="card">
-      <h2>Live Telemetry</h2>
+<div id="desktop">
+
+  <div class="win" data-key="telemetry">
+    <div class="win-titlebar"><span class="win-title">Live Telemetry</span></div>
+    <div class="win-body">
       <div class="grid">
         <div class="stat"><div class="v" id="vout">--</div><div class="l">Vout (V)</div></div>
         <div class="stat"><div class="v" id="iout">--</div><div class="l">Iout (A)</div></div>
@@ -124,35 +193,34 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
         <div class="stat"><div class="v" id="pin">--</div><div class="l">Pin (W)</div></div>
         <div class="stat"><div class="v" id="effi">--</div><div class="l">Efficiency (%)</div></div>
         <div class="stat"><div class="v" id="fin">--</div><div class="l">Line freq (Hz)</div></div>
+        <div class="stat">
+          <div class="v-row"><span class="v" id="energy">--</span><button class="reset-inline" onclick="resetEnergy()">Reset</button></div>
+          <div class="l">Energy (kWh)</div>
+        </div>
       </div>
     </div>
+    <div class="win-resize"></div>
+  </div>
 
-    <div class="card">
-      <h2>Output</h2>
-      <div class="row">
-        <span id="outState">--</span>
-        <button id="outBtn" onclick="toggleOutput()">Toggle</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Setpoints</h2>
+  <div class="win" data-key="setpoints">
+    <div class="win-titlebar"><span class="win-title">Setpoints</span></div>
+    <div class="win-body">
       <div class="row"><label>Online V</label><input type="number" step="0.1" id="onV"><button onclick="setVal('onV','/api/voltage/online')">Set</button></div>
       <div class="row"><label>Offline V</label><input type="number" step="0.1" id="offV"><button onclick="setVal('offV','/api/voltage/offline')">Set</button></div>
       <div class="row"><label>Online I</label><input type="number" step="0.1" id="onI"><button onclick="setVal('onI','/api/current/online')">Set</button></div>
       <div class="row"><label>Offline I</label><input type="number" step="0.1" id="offI"><button onclick="setVal('offI','/api/current/offline')">Set</button></div>
     </div>
+    <div class="win-resize"></div>
+  </div>
 
-    <div class="card">
-      <h2>Fan</h2>
+  <div class="win" data-key="fantimer">
+    <div class="win-titlebar"><span class="win-title">Fan &amp; Run Timer</span></div>
+    <div class="win-body">
       <div class="row">
+        <label>Fan</label>
         <span id="fanState">--</span>
         <button id="fanBtn" onclick="toggleFan()">Toggle Auto/Manual</button>
       </div>
-    </div>
-
-    <div class="card">
-      <h2>Run Timer</h2>
       <div class="row">
         <label>HH.MM.SS</label>
         <input type="text" id="timerInput" placeholder="00.00.00" style="width:110px">
@@ -163,19 +231,12 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
         <span id="timerRemaining">--</span>
       </div>
     </div>
-
-    <div class="card">
-      <h2>Energy</h2>
-      <div class="row">
-        <span id="energy">-- kWh</span>
-        <button class="danger" onclick="resetEnergy()">Reset</button>
-      </div>
-    </div>
+    <div class="win-resize"></div>
   </div>
 
-  <div class="main">
-    <div class="card">
-      <h2>Trends <span class="hint">(drag a variable onto the chart, or tap it)</span></h2>
+  <div class="win" data-key="trends">
+    <div class="win-titlebar"><span class="win-title">Trends <span class="hint">(drag a variable onto the chart, or tap it)</span></span></div>
+    <div class="win-body flex-col">
       <div class="var-palette" id="varPalette">
         <div class="var-chip" draggable="true" data-key="vout"><span class="dot" style="background:#4fd979"></span>Vout <b id="chip-vout">--</b></div>
         <div class="var-chip" draggable="true" data-key="iout"><span class="dot" style="background:#3d6bff"></span>Iout <b id="chip-iout">--</b></div>
@@ -191,33 +252,36 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
       </div>
       <div class="legend" id="legend"></div>
     </div>
+    <div class="win-resize"></div>
   </div>
-</div>
 
-<div class="card">
-  <h2>Output Profile <span class="hint">(schedule voltage/current over time)</span></h2>
-  <div class="row">
-    <label>Duration</label>
-    <input type="text" id="profDuration" placeholder="01.00.00" style="width:110px">
-    <button onclick="setProfileDuration()">Set</button>
-  </div>
-  <div class="profile-toolbar">
-    <div class="curve-toggle">
-      <button id="curveVoltBtn" class="active" onclick="setActiveCurve('voltage')">Voltage</button>
-      <button id="curveCurrBtn" onclick="setActiveCurve('current')">Current</button>
+  <div class="win" data-key="profile">
+    <div class="win-titlebar"><span class="win-title">Output Profile <span class="hint">(schedule voltage/current over time)</span></span></div>
+    <div class="win-body flex-col">
+      <div class="profile-toolbar">
+        <label>Duration</label>
+        <input type="text" id="profDuration" placeholder="01.00.00" style="width:110px">
+        <button onclick="setProfileDuration()">Set</button>
+        <div class="curve-toggle">
+          <button id="curveVoltBtn" class="active" onclick="setActiveCurve('voltage')">Voltage</button>
+          <button id="curveCurrBtn" onclick="setActiveCurve('current')">Current</button>
+        </div>
+        <button onclick="clearActiveCurve()">Clear points</button>
+        <button onclick="saveProfile()">Save</button>
+        <button id="profRunBtn" class="danger" onclick="toggleProfileRun()">Run</button>
+      </div>
+      <div class="profile-hint">Click the chart to add a point on the active curve. Drag a point to move it. Double-click a point to delete it.</div>
+      <div class="profile-chart-wrap" id="profChartWrap">
+        <canvas id="profChart" class="profile-chart"></canvas>
+      </div>
+      <div class="profile-status" id="profStatus">
+        <span class="dot"></span>
+        <span id="profStatusText">Stopped</span>
+      </div>
     </div>
-    <button onclick="clearActiveCurve()">Clear points</button>
-    <button onclick="saveProfile()">Save</button>
-    <button id="profRunBtn" class="danger" onclick="toggleProfileRun()">Run</button>
+    <div class="win-resize"></div>
   </div>
-  <div class="sub" style="margin-bottom:8px;">Click the chart to add a point on the active curve. Drag a point to move it. Double-click a point to delete it.</div>
-  <div class="profile-chart-wrap" id="profChartWrap">
-    <canvas id="profChart" class="profile-chart"></canvas>
-  </div>
-  <div class="profile-status" id="profStatus">
-    <span class="dot"></span>
-    <span id="profStatusText">Stopped</span>
-  </div>
+
 </div>
 
 <div id="toast"></div>
@@ -270,14 +334,23 @@ function fmt(v, digits) {
 const CHART_MAX_POINTS = 600; // ~5 min at the 500ms poll interval below
 
 const SERIES_META = {
-  vout: { label: 'Vout (V)',       color: '#4fd979', digits: 2 },
-  iout: { label: 'Iout (A)',       color: '#3d6bff', digits: 2 },
-  pout: { label: 'Pout (W)',       color: '#f5a623', digits: 2 },
-  vin:  { label: 'Vin (V)',        color: '#22d3ee', digits: 2 },
-  iin:  { label: 'Iin (A)',        color: '#f472b6', digits: 2 },
-  pin:  { label: 'Pin (W)',        color: '#facc15', digits: 2 },
-  effi: { label: 'Efficiency (%)', color: '#c77dff', digits: 1 },
+  vout: { label: 'Vout (V)',       color: '#4fd979', digits: 2, axis: 'y1' },
+  iout: { label: 'Iout (A)',       color: '#3d6bff', digits: 2, axis: 'y1' },
+  pout: { label: 'Pout (W)',       color: '#f5a623', digits: 2, axis: 'y1' },
+  vin:  { label: 'Vin (V)',        color: '#22d3ee', digits: 2, axis: 'y2' },
+  iin:  { label: 'Iin (A)',        color: '#f472b6', digits: 2, axis: 'y1' },
+  pin:  { label: 'Pin (W)',        color: '#facc15', digits: 2, axis: 'y1' },
+  effi: { label: 'Efficiency (%)', color: '#c77dff', digits: 1, axis: 'y1' },
 };
+
+// Fixed dual y-axes -- every series is plotted against one of these two
+// scales instead of auto-fitting its own min/max, so absolute values are
+// readable off the chart the same way the Output Profile chart's axis is.
+// Values outside a series' axis range are simply clipped at the plot
+// edge rather than distorting the scale.
+const Y1_RANGE = { min: 0, max: 100 };
+const Y2_RANGE = { min: 90, max: 300 };
+const BIG_CHART_MARGIN = { left: 34, right: 40, top: 20, bottom: 6 };
 
 const histories = {};
 Object.keys(SERIES_META).forEach((k) => { histories[k] = []; });
@@ -294,6 +367,15 @@ function pushSample(key, v) {
 const bigCanvas = document.getElementById('bigChart');
 const bigCtx = bigCanvas.getContext('2d');
 
+function getBigPlotRect(w, h) {
+  return {
+    x: BIG_CHART_MARGIN.left,
+    y: BIG_CHART_MARGIN.top,
+    w: Math.max(1, w - BIG_CHART_MARGIN.left - BIG_CHART_MARGIN.right),
+    h: Math.max(1, h - BIG_CHART_MARGIN.top - BIG_CHART_MARGIN.bottom),
+  };
+}
+
 function renderBigChart() {
   const dpr = window.devicePixelRatio || 1;
   const w = bigCanvas.clientWidth, h = bigCanvas.clientHeight;
@@ -307,44 +389,70 @@ function renderBigChart() {
   bigCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
   bigCtx.clearRect(0, 0, w, h);
 
-  bigCtx.strokeStyle = '#22252c';
-  bigCtx.lineWidth = 1;
-  for (let i = 1; i < 4; i++) {
-    const y = Math.round((h / 4) * i) + 0.5;
+  const rect = getBigPlotRect(w, h);
+  const gridCount = 4;
+
+  bigCtx.font = '10px sans-serif';
+  bigCtx.fillStyle = '#5c6270';
+  bigCtx.fillText('y1 (0-100)', 2, 12);
+  const y2TitleW = bigCtx.measureText('y2 (90-300)').width;
+  bigCtx.fillText('y2 (90-300)', w - y2TitleW - 2, 12);
+
+  // One shared set of horizontal gridlines, labeled on the left with the
+  // y1 scale and on the right with the y2 scale -- a standard dual-axis
+  // layout so a value's height on the chart reads directly off either
+  // side depending on which axis its series uses (see SERIES_META).
+  for (let i = 0; i <= gridCount; i++) {
+    const y = rect.y + (rect.h / gridCount) * i;
+
+    bigCtx.strokeStyle = '#22252c';
+    bigCtx.lineWidth = 1;
     bigCtx.beginPath();
-    bigCtx.moveTo(0, y);
-    bigCtx.lineTo(w, y);
+    bigCtx.moveTo(rect.x, y);
+    bigCtx.lineTo(rect.x + rect.w, y);
     bigCtx.stroke();
+
+    const y1Val = Y1_RANGE.max - ((Y1_RANGE.max - Y1_RANGE.min) / gridCount) * i;
+    const y2Val = Y2_RANGE.max - ((Y2_RANGE.max - Y2_RANGE.min) / gridCount) * i;
+
+    bigCtx.fillStyle = '#5c6270';
+    const leftLabel = String(Math.round(y1Val));
+    const leftW = bigCtx.measureText(leftLabel).width;
+    bigCtx.fillText(leftLabel, rect.x - leftW - 6, y + 3);
+
+    const rightLabel = String(Math.round(y2Val));
+    bigCtx.fillText(rightLabel, rect.x + rect.w + 6, y + 3);
   }
 
   const n = CHART_MAX_POINTS;
-  const stepX = w / (n - 1);
+  const stepX = rect.w / (n - 1);
+
+  bigCtx.save();
+  bigCtx.beginPath();
+  bigCtx.rect(rect.x, rect.y, rect.w, rect.h);
+  bigCtx.clip();
 
   activeSeries.forEach((key) => {
     const data = histories[key];
-    const vals = data.filter((v) => v !== null);
-    if (vals.length < 2) return;
-
-    let min = Math.min(...vals), max = Math.max(...vals);
-    if (min === max) { min -= 1; max += 1; }
-    const pad = (max - min) * 0.1;
-    min -= pad; max += pad;
-
+    const range = SERIES_META[key].axis === 'y2' ? Y2_RANGE : Y1_RANGE;
     const offset = n - data.length;
+
     bigCtx.beginPath();
     bigCtx.lineWidth = 2;
     bigCtx.strokeStyle = SERIES_META[key].color;
     let started = false;
 
     data.forEach((v, i) => {
-      const x = (offset + i) * stepX;
       if (v === null) { started = false; return; }
-      const y = h - ((v - min) / (max - min)) * h;
+      const x = rect.x + (offset + i) * stepX;
+      const y = rect.y + rect.h - ((v - range.min) / (range.max - range.min)) * rect.h;
       if (!started) { bigCtx.moveTo(x, y); started = true; }
       else bigCtx.lineTo(x, y);
     });
     bigCtx.stroke();
   });
+
+  bigCtx.restore();
 }
 
 function syncTrendUI() {
@@ -479,13 +587,13 @@ async function doRefresh() {
   renderBigChart();
 
   outputOn = s.output_on;
-  document.getElementById('outState').textContent = outputOn ? 'ON' : 'OFF';
-  document.getElementById('outBtn').className = outputOn ? '' : 'toggle-off';
+  document.getElementById('outState').textContent = 'Output: ' + (outputOn ? 'ON' : 'OFF');
+  document.getElementById('outBtn').className = outputOn ? 'state-on' : 'state-off';
 
   fanManual = s.fan_manual;
   document.getElementById('fanState').textContent = fanManual ? 'MANUAL' : 'AUTO';
 
-  document.getElementById('energy').textContent = fmt(s.energy_kwh, 4) + ' kWh';
+  document.getElementById('energy').textContent = fmt(s.energy_kwh, 4);
 
   document.getElementById('timerRemaining').textContent = s.timer_remaining || '--';
   document.getElementById('timerEnabled').checked = !!s.timer_enabled;
@@ -509,7 +617,10 @@ async function doRefresh() {
 
 async function toggleOutput() {
   const r = await api('/api/output', { on: !outputOn });
-  if (r) toast('Output ' + (r.output_on ? 'ENABLED' : 'DISABLED'));
+  if (r) {
+    outputOn = r.output_on;
+    toast('Output ' + (r.output_on ? 'ENABLED' : 'DISABLED'));
+  }
   refresh();
 }
 
@@ -946,6 +1057,180 @@ onEnter('profDuration', setProfileDuration);
 loadProfile();
 refresh();
 setInterval(refresh, 500); // device-side telemetry itself refreshes ~every 200ms (can_bridge.cpp)
+
+/* ---------------------------------------------------------------------
+   Window manager -- every top-level panel (.win) is freely movable by its
+   titlebar and resizable via the bottom-right handle, like a lightweight
+   desktop. Positions/sizes/stacking order persist in the browser's
+   localStorage so the layout survives a page reload -- this is a plain
+   browser API (not related to Claude's artifact sandboxing rules), and is
+   exactly what it's for here. Pointer Events (not separate mouse/touch
+   handlers) so dragging/resizing works identically with a mouse or a
+   finger, matching the Output Profile chart's editor above.
+
+   Default positions put Output Profile directly under Trends in the same
+   column, matching the original static layout -- from there the user is
+   free to rearrange everything. "Reset window layout" (top of page)
+   clears the saved layout and reloads.
+   --------------------------------------------------------------------- */
+const LAYOUT_KEY = 'psuUiWindowLayout';
+const MIN_WIN_W = 240;
+const MIN_WIN_H = 140;
+
+const DEFAULT_LAYOUT = {
+  telemetry: { left: 16,  top: 16,  width: 340, height: 320, z: 1 },
+  setpoints: { left: 16,  top: 352, width: 340, height: 250, z: 1 },
+  fantimer:  { left: 16,  top: 618, width: 340, height: 230, z: 1 },
+  trends:    { left: 372, top: 16,  width: 760, height: 560, z: 1 },
+  profile:   { left: 372, top: 592, width: 760, height: 460, z: 1 },
+};
+
+function loadLayout() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LAYOUT_KEY) || 'null');
+    const merged = JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+    if (saved) {
+      // Only accept keys that still exist -- an older saved layout from a
+      // previous firmware version might reference a panel that's since
+      // been renamed/removed.
+      Object.keys(saved).forEach((k) => { if (merged[k]) merged[k] = saved[k]; });
+    }
+    return merged;
+  } catch (e) {
+    return JSON.parse(JSON.stringify(DEFAULT_LAYOUT));
+  }
+}
+
+let layout = loadLayout();
+let topZ = 1;
+
+function saveLayout() {
+  try { localStorage.setItem(LAYOUT_KEY, JSON.stringify(layout)); } catch (e) { /* storage full/disabled -- not fatal */ }
+}
+
+// Layout already auto-saves after every drag/resize -- this button is an
+// explicit, unmistakable "yes, keep this" action for anyone who'd rather
+// not rely on that happening silently in the background.
+function saveLayoutManual() {
+  saveLayout();
+  toast('Window layout saved');
+}
+
+function resetLayout() {
+  try { localStorage.removeItem(LAYOUT_KEY); } catch (e) { /* ignore */ }
+  location.reload();
+}
+
+function updateDesktopHeight() {
+  let maxBottom = 0;
+  Object.values(layout).forEach((l) => { maxBottom = Math.max(maxBottom, l.top + l.height); });
+  document.getElementById('desktop').style.minHeight = (maxBottom + 24) + 'px';
+}
+
+function applyLayout() {
+  document.querySelectorAll('.win').forEach((win) => {
+    const l = layout[win.dataset.key];
+    if (!l) return;
+    win.style.left = l.left + 'px';
+    win.style.top = l.top + 'px';
+    win.style.width = l.width + 'px';
+    win.style.height = l.height + 'px';
+    win.style.zIndex = l.z;
+    topZ = Math.max(topZ, l.z);
+  });
+  updateDesktopHeight();
+}
+
+function bringToFront(win) {
+  topZ += 1;
+  win.style.zIndex = topZ;
+  layout[win.dataset.key].z = topZ;
+}
+
+// Trends/Output Profile canvases size themselves off clientWidth/Height at
+// render time, but nothing calls render again just because their window
+// changed size -- do that explicitly while dragging the resize handle.
+function onWinResized(win) {
+  if (win.dataset.key === 'trends') renderBigChart();
+  if (win.dataset.key === 'profile') renderProfileChart();
+}
+
+function makeDraggable(win) {
+  const bar = win.querySelector('.win-titlebar');
+  let dragging = false;
+  let startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  bar.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const l = layout[win.dataset.key];
+    startLeft = l.left;
+    startTop = l.top;
+    bar.setPointerCapture(e.pointerId);
+  });
+
+  bar.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const l = layout[win.dataset.key];
+    l.left = Math.max(0, startLeft + (e.clientX - startX));
+    l.top = Math.max(0, startTop + (e.clientY - startY));
+    win.style.left = l.left + 'px';
+    win.style.top = l.top + 'px';
+    updateDesktopHeight();
+  });
+
+  function endDrag() {
+    if (!dragging) return;
+    dragging = false;
+    saveLayout();
+  }
+  bar.addEventListener('pointerup', endDrag);
+  bar.addEventListener('pointercancel', endDrag);
+}
+
+function makeResizable(win) {
+  const handle = win.querySelector('.win-resize');
+  let resizing = false;
+  let startX = 0, startY = 0, startW = 0, startH = 0;
+
+  handle.addEventListener('pointerdown', (e) => {
+    e.stopPropagation();
+    resizing = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    const l = layout[win.dataset.key];
+    startW = l.width;
+    startH = l.height;
+    handle.setPointerCapture(e.pointerId);
+  });
+
+  handle.addEventListener('pointermove', (e) => {
+    if (!resizing) return;
+    const l = layout[win.dataset.key];
+    l.width = Math.max(MIN_WIN_W, startW + (e.clientX - startX));
+    l.height = Math.max(MIN_WIN_H, startH + (e.clientY - startY));
+    win.style.width = l.width + 'px';
+    win.style.height = l.height + 'px';
+    onWinResized(win);
+    updateDesktopHeight();
+  });
+
+  function endResize() {
+    if (!resizing) return;
+    resizing = false;
+    saveLayout();
+  }
+  handle.addEventListener('pointerup', endResize);
+  handle.addEventListener('pointercancel', endResize);
+}
+
+document.querySelectorAll('.win').forEach((win) => {
+  win.addEventListener('pointerdown', () => bringToFront(win));
+  makeDraggable(win);
+  makeResizable(win);
+});
+applyLayout();
 </script>
 </body>
 </html>

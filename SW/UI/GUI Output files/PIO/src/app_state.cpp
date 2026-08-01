@@ -6,7 +6,7 @@ unsigned long last_activity_time = 0;
 
 bool suppress_switch_event = false;
 bool suppress_fan_event = false;
-bool suppress_timer_checkbox_event = false;
+bool suppress_timer_switch_event = false;
 
 /* --- persisted user settings: compile-time defaults, overwritten by
    prefs_load_all() at boot from whatever was last saved to NVS --- */

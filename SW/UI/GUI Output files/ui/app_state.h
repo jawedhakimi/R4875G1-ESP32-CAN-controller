@@ -17,7 +17,7 @@ extern unsigned long last_activity_time;
    reflected. --- */
 extern bool suppress_switch_event;
 extern bool suppress_fan_event;
-extern bool suppress_timer_checkbox_event;
+extern bool suppress_timer_switch_event;
 
 /* --- persisted user settings (mirrors of NVS, loaded at boot by
    prefs_load_all()) --- */
@@ -41,7 +41,7 @@ extern unsigned long off_timeout_ms;
 extern uint32_t saved_timer_seconds;      // configured timer value
 extern uint32_t timer_remaining_seconds;
 extern bool timer_running;
-extern bool saved_use_timer;              // checkbox state
+extern bool saved_use_timer;              // "use timer" slide switch state
 extern unsigned long last_timer_tick_ms;
 
 /* --- energy metering --- */

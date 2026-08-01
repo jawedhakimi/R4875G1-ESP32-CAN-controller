@@ -16,8 +16,9 @@ void psu_timer_set_enabled(bool enabled);
    zero. Call every loop. */
 void handle_psu_timer();
 
-/* Registers the timer text field + "use timer" checkbox event callbacks.
-   Call once from setup(). */
+/* Registers the timer text field + "use timer" slide switch event
+   callbacks, and syncs their initial state from saved_timer_seconds /
+   saved_use_timer. Call once from setup(). */
 void psu_timer_register_callbacks();
 
 #endif

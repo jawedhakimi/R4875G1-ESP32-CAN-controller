@@ -45,7 +45,7 @@ void prefs_load_all() {
 
     saved_brightness_pct = preferences.getInt("bright", 100);
     saved_sleep_sec      = preferences.getInt("sleep", 30);
-    saved_dim_sec        = preferences.getInt("dim", max(3, saved_sleep_sec / 2));
+    saved_dim_sec        = preferences.getInt("dim", saved_sleep_sec > 0 ? max(3, saved_sleep_sec / 2) : 0);
 
     saved_output_enable  = preferences.getBool("out_en", true);
     saved_fan_manual     = preferences.getBool("fan_man", false);
@@ -58,8 +58,10 @@ void prefs_load_all() {
     preferences.end();
 
     saved_brightness_pct = constrain(saved_brightness_pct, 1, 100);
-    saved_sleep_sec      = constrain(saved_sleep_sec, 5, 3600);
-    saved_dim_sec        = constrain(saved_dim_sec, 3, saved_sleep_sec);
+    saved_sleep_sec      = constrain(saved_sleep_sec, SLEEP_SEC_MIN, SLEEP_SEC_MAX);
+    // 0 == "never sleep" (ui_SliderSleepTimer's minimum); disable dimming too
+    // in that case rather than leaving the screen dim forever.
+    saved_dim_sec        = (saved_sleep_sec > 0) ? constrain(saved_dim_sec, 3, saved_sleep_sec) : 0;
 
     dim_timeout_ms = (unsigned long)saved_dim_sec * 1000UL;
     off_timeout_ms = (unsigned long)saved_sleep_sec * 1000UL;

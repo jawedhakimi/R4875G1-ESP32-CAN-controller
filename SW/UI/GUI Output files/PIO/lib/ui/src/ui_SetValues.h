@@ -35,6 +35,11 @@ extern lv_obj_t *ui_UniIout1;
 extern lv_obj_t *ui_SetValues_TextArea2;
 extern void ui_event_Numpad( lv_event_t * e);
 extern lv_obj_t *ui_Numpad;
+extern lv_obj_t *ui_SetValues_PanelTimer;
+extern lv_obj_t *ui_SetValues_Label1;
+extern void ui_event_SetValues_TextAreaTimer( lv_event_t * e);
+extern lv_obj_t *ui_SetValues_TextAreaTimer;
+extern lv_obj_t *ui_SetValues_SwitchTimer;
 // CUSTOM VARIABLES
 extern lv_obj_t *uic_SetValues;
 extern lv_obj_t *uic_PanlSetOnlineOutput;
@@ -50,6 +55,9 @@ extern lv_obj_t *uic_VarOnlineIout;
 extern lv_obj_t *uic_VarOfflineIout;
 extern lv_obj_t *uic_UniIout1;
 extern lv_obj_t *uic_Numpad;
+extern lv_obj_t *uic_SetValues_PanelTimer;
+extern lv_obj_t *uic_SetValues_TextAreaTimer;
+extern lv_obj_t *uic_SetValues_SwitchTimer;
 
 #ifdef __cplusplus
 } /*extern "C"*/
