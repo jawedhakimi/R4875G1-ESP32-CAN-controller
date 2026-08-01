@@ -85,3 +85,23 @@ The web panel is protected with HTTP Basic Auth
 `psucontrol`). **Change these before deploying** -- Basic Auth isn't
 encrypted, so treat it as "keep casual access off your LAN," not real
 security, and don't expose the device to the internet.
+
+## Output profile
+
+The web panel's "Output Profile" card lets you draw two independent
+voltage/current curves against a time axis and run them live against the
+PSU (`psu_profile.h/.cpp`), through the same shared online-voltage/current
+setters as everything else, so it can't drift out of sync with manual
+setpoint changes.
+
+The curve definition (points + duration) persists to NVS and survives a
+reboot. Whether it was **running** does not -- on every boot the profile
+starts stopped, never auto-resumed, even if it was mid-run when power was
+lost. That's deliberate: a device that outputs real voltage/current to
+hardware shouldn't silently keep driving a schedule after an unattended
+power cycle. Pressing Run always (re)starts from the beginning.
+
+Editing is rejected server-side while a profile is running (`psu_profile_set()`
+returns an error) -- stop it first. The web UI also disables the chart's
+click/drag interactions while running, so this shouldn't come up in
+practice.

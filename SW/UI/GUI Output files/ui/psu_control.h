@@ -9,10 +9,18 @@ float clampf(float x, float lo, float hi);
    log, and (for output/fan) reflect into the touchscreen widgets. Called
    from the touchscreen callbacks, the serial console, and the web API, so
    the three surfaces can't drift out of sync with each other. Each
-   returns the value actually applied (post-clamp). --------------------- */
-float psu_set_online_voltage(float v);
+   returns the value actually applied (post-clamp).
+
+   `persist` defaults to true (the normal manual-entry case). The output
+   profile executor (psu_profile.cpp) calls the online setters with
+   persist=false on every tick of a running profile -- that can be once a
+   second for the whole profile duration, and writing NVS that often would
+   wear the flash for no benefit. It does one final persist=true call when
+   a profile finishes, so the resting setpoint is saved same as any
+   manually-entered one. --------------------------------------------------- */
+float psu_set_online_voltage(float v, bool persist = true);
 float psu_set_offline_voltage(float v);
-float psu_set_online_current(float i);
+float psu_set_online_current(float i, bool persist = true);
 float psu_set_offline_current(float i);
 void  psu_set_output(bool on);
 void  psu_set_fan_manual(bool manual);

@@ -21,17 +21,20 @@ float clampf(float x, float lo, float hi) {
    + serial already existed as separate copies; the web API would have
    been a third). --------------------------------------------------------- */
 
-float psu_set_online_voltage(float v) {
+float psu_set_online_voltage(float v, bool persist) {
     v = clampf(v, PSU_VMIN, PSU_VMAX);
     saved_online_v = v;
-    save_float_pref("on_v", v);
+    if (persist) save_float_pref("on_v", v);
     psu.setVoltage(v);
 
     char buf[24];
     snprintf(buf, sizeof(buf), "%.2f", v);
     ui_set_text_safe(ui_VarOnlineVout, buf);
 
-    log_to_settings("Online Vout set to " + String(v, 2) + " V");
+    // persist=false means a high-frequency programmatic tick (the profile
+    // executor) -- logging every one of those would spam the Settings log
+    // for an entire profile's duration. Only log real setting changes.
+    if (persist) log_to_settings("Online Vout set to " + String(v, 2) + " V");
     last_activity_time = millis();
     return v;
 }
@@ -51,17 +54,17 @@ float psu_set_offline_voltage(float v) {
     return v;
 }
 
-float psu_set_online_current(float i) {
+float psu_set_online_current(float i, bool persist) {
     i = clampf(i, PSU_IMIN, PSU_IMAX);
     saved_online_i = i;
-    save_float_pref("on_i", i);
+    if (persist) save_float_pref("on_i", i);
     psu.setCurrent(i);
 
     char buf[24];
     snprintf(buf, sizeof(buf), "%.2f", i);
     ui_set_text_safe(ui_VarOnlineIout, buf);
 
-    log_to_settings("Online Iout set to " + String(i, 2) + " A");
+    if (persist) log_to_settings("Online Iout set to " + String(i, 2) + " A");
     last_activity_time = millis();
     return i;
 }

@@ -22,6 +22,7 @@
 #include "energy_meter.h"
 #include "psu_timer.h"
 #include "psu_control.h"
+#include "psu_profile.h"
 #include "can_bridge.h"
 #include "serial_console.h"
 #include "wifi_manager.h"
@@ -106,6 +107,7 @@ void setup() {
     ui_init();
 
     prefs_load_all();
+    psu_profile_load();
     save_current_settings_to_ui();
     backlight_apply_saved_brightness();
 
@@ -150,6 +152,7 @@ void loop() {
 
     handle_backlight();
     handle_psu_timer();
+    handle_psu_profile();
     handle_can_and_ui();
     handle_serial_commands();
     wifi_manager_loop();

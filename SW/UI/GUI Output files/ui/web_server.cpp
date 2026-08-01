@@ -5,6 +5,7 @@
 #include "app_state.h"
 #include "psu_control.h"
 #include "psu_timer.h"
+#include "psu_profile.h"
 #include "energy_meter.h"
 #include "web_page.h"
 
@@ -106,6 +107,14 @@ static void handle_status() {
     doc["timer_remaining"] = (saved_use_timer && timer_running)
         ? format_hms(timer_remaining_seconds)
         : "--";
+
+    // Lightweight profile run-state, polled at the same 500ms cadence as
+    // everything else above. The full point arrays are NOT included here
+    // -- those only change on an explicit save, so they're fetched
+    // separately via GET /api/profile instead of on every poll.
+    doc["profile_running"] = psu_profile_is_running();
+    doc["profile_elapsed_sec"] = psu_profile_elapsed_sec();
+    doc["profile_duration_sec"] = psu_profile_duration_sec();
 
     send_json(doc);
 }
@@ -221,6 +230,98 @@ static void handle_energy_reset() {
     send_json(resp);
 }
 
+static void handle_profile_get() {
+    if (!require_auth()) return;
+
+    JsonDocument doc;
+    doc["duration_sec"] = psu_profile_duration_sec();
+    doc["running"] = psu_profile_is_running();
+    doc["elapsed_sec"] = psu_profile_elapsed_sec();
+
+    JsonArray va = doc["voltage_points"].to<JsonArray>();
+    const ProfilePoint *vp = psu_profile_voltage_points();
+    for (int i = 0; i < psu_profile_voltage_count(); i++) {
+        JsonObject o = va.add<JsonObject>();
+        o["t"] = vp[i].t;
+        o["v"] = vp[i].value;
+    }
+
+    JsonArray ia = doc["current_points"].to<JsonArray>();
+    const ProfilePoint *ip = psu_profile_current_points();
+    for (int i = 0; i < psu_profile_current_count(); i++) {
+        JsonObject o = ia.add<JsonObject>();
+        o["t"] = ip[i].t;
+        o["v"] = ip[i].value;
+    }
+
+    send_json(doc);
+}
+
+// Reads a JSON array of {t, v} objects into a fixed-size ProfilePoint
+// buffer. Returns false (fills *error) if there are more than `max`.
+static bool parse_profile_points(JsonArray arr, ProfilePoint *out, int max, int &count, String &error) {
+    count = 0;
+    for (JsonVariant v : arr) {
+        if (count >= max) {
+            error = "Too many points (max " + String(max) + " per curve).";
+            return false;
+        }
+        JsonObject o = v.as<JsonObject>();
+        out[count].t = o["t"] | 0;
+        out[count].value = o["v"] | 0.0f;
+        count++;
+    }
+    return true;
+}
+
+static void handle_profile_set() {
+    if (!require_auth()) return;
+    JsonDocument doc;
+    if (!parse_body(doc)) return;
+
+    uint32_t duration = doc["duration_sec"] | 0;
+
+    ProfilePoint vpts[PSU_PROFILE_MAX_POINTS];
+    ProfilePoint ipts[PSU_PROFILE_MAX_POINTS];
+    int vcount = 0, icount = 0;
+    String error;
+
+    if (!parse_profile_points(doc["voltage_points"].as<JsonArray>(), vpts, PSU_PROFILE_MAX_POINTS, vcount, error) ||
+        !parse_profile_points(doc["current_points"].as<JsonArray>(), ipts, PSU_PROFILE_MAX_POINTS, icount, error)) {
+        send_error(400, error.c_str());
+        return;
+    }
+
+    if (!psu_profile_set(duration, vpts, vcount, ipts, icount, error)) {
+        send_error(409, error.c_str());
+        return;
+    }
+
+    JsonDocument resp;
+    resp["ok"] = true;
+    send_json(resp);
+}
+
+static void handle_profile_run() {
+    if (!require_auth()) return;
+    JsonDocument doc;
+    if (!parse_body(doc)) return;
+
+    bool run = doc["run"] | false;
+    bool ok = true;
+    if (run) {
+        ok = psu_profile_start();
+    } else {
+        psu_profile_stop();
+    }
+
+    JsonDocument resp;
+    resp["ok"] = ok;
+    resp["running"] = psu_profile_is_running();
+    resp["elapsed_sec"] = psu_profile_elapsed_sec();
+    send_json(resp);
+}
+
 static void handle_not_found() {
     server.send(404, "text/plain", "Not found");
 }
@@ -245,6 +346,10 @@ void web_server_begin() {
     server.on("/api/timer/enabled", HTTP_POST, handle_timer_enabled);
 
     server.on("/api/energy/reset", HTTP_POST, handle_energy_reset);
+
+    server.on("/api/profile", HTTP_GET, handle_profile_get);
+    server.on("/api/profile", HTTP_POST, handle_profile_set);
+    server.on("/api/profile/run", HTTP_POST, handle_profile_run);
 
     server.onNotFound(handle_not_found);
     server.begin();

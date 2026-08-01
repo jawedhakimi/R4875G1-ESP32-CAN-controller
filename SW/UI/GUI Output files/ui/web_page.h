@@ -85,6 +85,19 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
     padding: 0 4px; font-size: 1.1em; line-height: 1;
   }
   .legend-chip button:hover { color: #eaeaea; }
+  .curve-toggle { display: flex; border: 1px solid #2c3038; border-radius: 8px; overflow: hidden; }
+  .curve-toggle button {
+    background: #14161a; border: none; border-radius: 0; color: #9aa3b2;
+    padding: 8px 14px; font-size: 0.85em; cursor: pointer;
+  }
+  .curve-toggle button.active { background: #3d6bff; color: white; }
+  .profile-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 12px 0; }
+  .profile-chart-wrap { position: relative; border-radius: 8px; overflow: hidden; }
+  .profile-chart { width: 100%; height: 320px; display: block; background: #14161a; cursor: crosshair; touch-action: none; }
+  .profile-chart-wrap.running .profile-chart { cursor: default; opacity: 0.85; }
+  .profile-status { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.85em; color: #9aa3b2; }
+  .profile-status .dot { width: 8px; height: 8px; border-radius: 50%; background: #5c6270; }
+  .profile-status.running .dot { background: #4fd979; }
   #toast {
     position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
     background: #2c3038; padding: 8px 16px; border-radius: 8px; font-size: 0.85em;
@@ -178,6 +191,32 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
       </div>
       <div class="legend" id="legend"></div>
     </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Output Profile <span class="hint">(schedule voltage/current over time)</span></h2>
+  <div class="row">
+    <label>Duration</label>
+    <input type="text" id="profDuration" placeholder="01.00.00" style="width:110px">
+    <button onclick="setProfileDuration()">Set</button>
+  </div>
+  <div class="profile-toolbar">
+    <div class="curve-toggle">
+      <button id="curveVoltBtn" class="active" onclick="setActiveCurve('voltage')">Voltage</button>
+      <button id="curveCurrBtn" onclick="setActiveCurve('current')">Current</button>
+    </div>
+    <button onclick="clearActiveCurve()">Clear points</button>
+    <button onclick="saveProfile()">Save</button>
+    <button id="profRunBtn" class="danger" onclick="toggleProfileRun()">Run</button>
+  </div>
+  <div class="sub" style="margin-bottom:8px;">Click the chart to add a point on the active curve. Drag a point to move it. Double-click a point to delete it.</div>
+  <div class="profile-chart-wrap" id="profChartWrap">
+    <canvas id="profChart" class="profile-chart"></canvas>
+  </div>
+  <div class="profile-status" id="profStatus">
+    <span class="dot"></span>
+    <span id="profStatusText">Stopped</span>
   </div>
 </div>
 
@@ -457,6 +496,15 @@ async function doRefresh() {
   if (document.activeElement.id !== 'onI') document.getElementById('onI').value = fmt(s.online_i, 2);
   if (document.activeElement.id !== 'offI') document.getElementById('offI').value = fmt(s.offline_i, 2);
   if (document.activeElement.id !== 'timerInput') document.getElementById('timerInput').value = s.timer_set || '';
+
+  // Running/elapsed only -- never the duration or point arrays, so this
+  // fast poll can't clobber an edit in progress. The full definition only
+  // (re)loads via loadProfile(), on page init and after an explicit save.
+  if (s.profile_running !== undefined) {
+    profileRunning = s.profile_running;
+    profileElapsed = s.profile_elapsed_sec;
+    updateProfileRunUI();
+  }
 }
 
 async function toggleOutput() {
@@ -499,6 +547,384 @@ async function resetEnergy() {
   refresh();
 }
 
+/* ---------------------------------------------------------------------
+   Output Profile -- a scheduled voltage/current curve, edited here and
+   executed live on the device (psu_profile.cpp). Two independent point
+   arrays (voltage, current), each an ordered list of {t, v}. Only the
+   "active" curve is editable at a time -- a single click position is
+   otherwise ambiguous between "volts" and "amps". The inactive curve
+   still draws, dimmed, for context.
+
+   HH.MM.SS matches the existing Run Timer field's format for consistency.
+   Point values/limits are mirrored from HuaweiCAN.h here only for local
+   axis scaling and input clamping -- the device re-clamps authoritatively
+   in psu_profile_set(), so a mismatch here would only be a display
+   quirk, never a safety issue.
+   --------------------------------------------------------------------- */
+const CURVE_LIMITS = {
+  voltage: { min: 41.5, max: 58.5, color: '#4fd979' },
+  current: { min: 0, max: 75, color: '#3d6bff' },
+};
+const PROFILE_POINT_HIT_RADIUS = 10; // px
+
+let profileDuration = 3600; // seconds
+let voltagePoints = [];     // [{t, v}], t in seconds
+let currentPoints = [];
+let activeCurve = 'voltage';
+let profileRunning = false;
+let profileElapsed = 0;
+
+function formatHMS(totalSec) {
+  totalSec = Math.max(0, Math.round(totalSec));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  const pad = (n) => String(n).padStart(2, '0');
+  return pad(h) + '.' + pad(m) + '.' + pad(s);
+}
+
+function parseHMS(str) {
+  const parts = str.trim().split('.');
+  if (parts.length !== 3) return null;
+  const h = parseInt(parts[0], 10), m = parseInt(parts[1], 10), s = parseInt(parts[2], 10);
+  if (!Number.isFinite(h) || !Number.isFinite(m) || !Number.isFinite(s)) return null;
+  if (h < 0 || m < 0 || m >= 60 || s < 0 || s >= 60) return null;
+  return h * 3600 + m * 60 + s;
+}
+
+function curvePoints(curve) {
+  return curve === 'voltage' ? voltagePoints : currentPoints;
+}
+
+// The chart reserves margins for axis labels -- everything below maps
+// time/value to/from a "plot rect" inside the canvas rather than the full
+// canvas, so labels never overlap the plotted lines/points.
+const CHART_MARGIN = { left: 50, right: 8, top: 8, bottom: 20 };
+
+function getPlotRect(w, h) {
+  return {
+    x: CHART_MARGIN.left,
+    y: CHART_MARGIN.top,
+    w: Math.max(1, w - CHART_MARGIN.left - CHART_MARGIN.right),
+    h: Math.max(1, h - CHART_MARGIN.top - CHART_MARGIN.bottom),
+  };
+}
+
+function timeToX(t, rect) {
+  return rect.x + (t / profileDuration) * rect.w;
+}
+function xToTime(x, rect) {
+  return Math.max(0, Math.min(profileDuration, Math.round(((x - rect.x) / rect.w) * profileDuration)));
+}
+
+// Active curve's value axis auto-fits to its own points (padded) so small
+// variations stay readable -- points are already clamped to the curve's
+// hardware limits when added/dragged, so this never needs to intersect
+// with CURVE_LIMITS again.
+function getCurveRange(curve) {
+  const lim = CURVE_LIMITS[curve];
+  const pts = curvePoints(curve);
+  if (pts.length === 0) return { min: lim.min, max: lim.max };
+  const vals = pts.map((p) => p.v);
+  let dmin = Math.min(...vals), dmax = Math.max(...vals);
+  if (dmin === dmax) { dmin -= 1; dmax += 1; }
+  const pad = (dmax - dmin) * 0.15;
+  return { min: dmin - pad, max: dmax + pad };
+}
+
+function valueToY(v, range, rect) {
+  return rect.y + rect.h - ((v - range.min) / (range.max - range.min)) * rect.h;
+}
+function yToValue(y, range, rect) {
+  return range.min + ((rect.y + rect.h - y) / rect.h) * (range.max - range.min);
+}
+
+function curveUnit(curve) {
+  return curve === 'voltage' ? 'V' : 'A';
+}
+
+const profCanvas = document.getElementById('profChart');
+const profCtx = profCanvas.getContext('2d');
+
+function drawProfileCurve(curve, active, rect) {
+  const pts = curvePoints(curve);
+  if (pts.length === 0) return;
+
+  const range = getCurveRange(curve);
+  profCtx.globalAlpha = active ? 1 : 0.3;
+  profCtx.strokeStyle = CURVE_LIMITS[curve].color;
+  profCtx.lineWidth = 2;
+  profCtx.beginPath();
+  pts.forEach((p, idx) => {
+    const x = timeToX(p.t, rect), y = valueToY(p.v, range, rect);
+    if (idx === 0) profCtx.moveTo(x, y);
+    else profCtx.lineTo(x, y);
+  });
+  profCtx.stroke();
+
+  if (active) {
+    profCtx.fillStyle = CURVE_LIMITS[curve].color;
+    pts.forEach((p) => {
+      const x = timeToX(p.t, rect), y = valueToY(p.v, range, rect);
+      profCtx.beginPath();
+      profCtx.arc(x, y, 5, 0, Math.PI * 2);
+      profCtx.fill();
+    });
+
+    // Coordinate label next to each point -- "value unit, HH.MM.SS" --
+    // so a point's exact position is readable at a glance instead of
+    // having to guess it off the axes.
+    profCtx.font = '10px sans-serif';
+    pts.forEach((p) => {
+      const x = timeToX(p.t, rect), y = valueToY(p.v, range, rect);
+      const label = p.v.toFixed(2) + curveUnit(curve) + ', ' + formatHMS(p.t);
+      const tw = profCtx.measureText(label).width;
+
+      let lx = x - tw / 2;
+      lx = Math.max(rect.x, Math.min(rect.x + rect.w - tw, lx));
+      let ly = y - 10; // above the point by default
+      if (ly < rect.y + 8) ly = y + 18; // flip below if too close to the top
+
+      profCtx.fillStyle = 'rgba(20, 22, 26, 0.85)';
+      profCtx.fillRect(lx - 3, ly - 10, tw + 6, 13);
+      profCtx.fillStyle = CURVE_LIMITS[curve].color;
+      profCtx.fillText(label, lx, ly);
+    });
+  }
+  profCtx.globalAlpha = 1;
+}
+
+function renderProfileChart() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = profCanvas.clientWidth, h = profCanvas.clientHeight;
+  if (w === 0 || h === 0) return;
+
+  const pw = Math.round(w * dpr), ph = Math.round(h * dpr);
+  if (profCanvas.width !== pw || profCanvas.height !== ph) {
+    profCanvas.width = pw;
+    profCanvas.height = ph;
+  }
+  profCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  profCtx.clearRect(0, 0, w, h);
+
+  const rect = getPlotRect(w, h);
+  const range = getCurveRange(activeCurve);
+  const gridCount = 5;
+
+  profCtx.font = '10px sans-serif';
+
+  // Y-axis (active curve's value scale) -- horizontal gridlines + labels
+  // in the left margin.
+  for (let i = 0; i <= gridCount; i++) {
+    const y = rect.y + (rect.h / gridCount) * i;
+    const v = range.max - ((range.max - range.min) / gridCount) * i;
+
+    profCtx.strokeStyle = '#22252c';
+    profCtx.lineWidth = 1;
+    profCtx.beginPath();
+    profCtx.moveTo(rect.x, y);
+    profCtx.lineTo(rect.x + rect.w, y);
+    profCtx.stroke();
+
+    profCtx.fillStyle = '#5c6270';
+    const label = v.toFixed(1);
+    const tw = profCtx.measureText(label).width;
+    profCtx.fillText(label, rect.x - tw - 6, y + 3);
+  }
+
+  // X-axis (time) -- vertical gridlines + labels along the bottom margin.
+  for (let i = 0; i <= gridCount; i++) {
+    const x = rect.x + (rect.w / gridCount) * i;
+    profCtx.strokeStyle = '#22252c';
+    profCtx.lineWidth = 1;
+    profCtx.beginPath();
+    profCtx.moveTo(x, rect.y);
+    profCtx.lineTo(x, rect.y + rect.h);
+    profCtx.stroke();
+
+    profCtx.fillStyle = '#5c6270';
+    const label = formatHMS(Math.round((profileDuration / gridCount) * i));
+    const tw = profCtx.measureText(label).width;
+    let lx = x - tw / 2;
+    if (i === 0) lx = x;
+    if (i === gridCount) lx = x - tw;
+    profCtx.fillText(label, lx, h - 4);
+  }
+
+  const inactive = activeCurve === 'voltage' ? 'current' : 'voltage';
+  drawProfileCurve(inactive, false, rect);
+  drawProfileCurve(activeCurve, true, rect);
+
+  if (profileElapsed > 0) {
+    const x = timeToX(profileElapsed, rect);
+    profCtx.strokeStyle = '#eaeaea';
+    profCtx.setLineDash([4, 3]);
+    profCtx.beginPath();
+    profCtx.moveTo(x, rect.y);
+    profCtx.lineTo(x, rect.y + rect.h);
+    profCtx.stroke();
+    profCtx.setLineDash([]);
+  }
+}
+
+function getCanvasPos(e) {
+  const rect = profCanvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function findNearestProfilePoint(curve, x, y, rect) {
+  const pts = curvePoints(curve);
+  const range = getCurveRange(curve);
+  let best = -1, bestDist = Infinity;
+  pts.forEach((p, idx) => {
+    const d = Math.hypot(timeToX(p.t, rect) - x, valueToY(p.v, range, rect) - y);
+    if (d < bestDist) { bestDist = d; best = idx; }
+  });
+  return bestDist <= PROFILE_POINT_HIT_RADIUS ? best : -1;
+}
+
+let dragPoint = null;   // { curve, index }
+let dragMoved = false;
+let suppressNextClick = false;
+
+profCanvas.addEventListener('pointerdown', (e) => {
+  if (profileRunning) return;
+  const rect = getPlotRect(profCanvas.clientWidth, profCanvas.clientHeight);
+  const { x, y } = getCanvasPos(e);
+  const idx = findNearestProfilePoint(activeCurve, x, y, rect);
+  if (idx >= 0) {
+    dragPoint = { curve: activeCurve, index: idx };
+    dragMoved = false;
+    profCanvas.setPointerCapture(e.pointerId);
+  }
+});
+
+profCanvas.addEventListener('pointermove', (e) => {
+  if (!dragPoint || profileRunning) return;
+  const rect = getPlotRect(profCanvas.clientWidth, profCanvas.clientHeight);
+  const { x, y } = getCanvasPos(e);
+  const lim = CURVE_LIMITS[dragPoint.curve];
+  const range = getCurveRange(dragPoint.curve);
+
+  const t = xToTime(Math.max(rect.x, Math.min(rect.x + rect.w, x)), rect);
+  let v = yToValue(Math.max(rect.y, Math.min(rect.y + rect.h, y)), range, rect);
+  v = Math.max(lim.min, Math.min(lim.max, v));
+
+  curvePoints(dragPoint.curve)[dragPoint.index] = { t, v };
+  dragMoved = true;
+  renderProfileChart();
+});
+
+profCanvas.addEventListener('pointerup', (e) => {
+  if (!dragPoint) return;
+  curvePoints(dragPoint.curve).sort((a, b) => a.t - b.t);
+  if (dragMoved) suppressNextClick = true;
+  dragPoint = null;
+  renderProfileChart();
+});
+
+profCanvas.addEventListener('click', (e) => {
+  if (suppressNextClick) { suppressNextClick = false; return; }
+  if (profileRunning) return;
+
+  const rect = getPlotRect(profCanvas.clientWidth, profCanvas.clientHeight);
+  const { x, y } = getCanvasPos(e);
+
+  // Clicking on/near an existing point does nothing here -- drag to move
+  // it, double-click to delete it. Only an empty spot adds a new point.
+  if (findNearestProfilePoint(activeCurve, x, y, rect) >= 0) return;
+
+  const lim = CURVE_LIMITS[activeCurve];
+  const range = getCurveRange(activeCurve);
+  const t = xToTime(x, rect);
+  let v = yToValue(y, range, rect);
+  v = Math.max(lim.min, Math.min(lim.max, v));
+
+  const pts = curvePoints(activeCurve);
+  pts.push({ t, v });
+  pts.sort((a, b) => a.t - b.t);
+  renderProfileChart();
+});
+
+profCanvas.addEventListener('dblclick', (e) => {
+  if (profileRunning) return;
+  const rect = getPlotRect(profCanvas.clientWidth, profCanvas.clientHeight);
+  const { x, y } = getCanvasPos(e);
+  const idx = findNearestProfilePoint(activeCurve, x, y, rect);
+  if (idx >= 0) {
+    curvePoints(activeCurve).splice(idx, 1);
+    renderProfileChart();
+  }
+});
+
+window.addEventListener('resize', renderProfileChart);
+
+function setActiveCurve(curve) {
+  activeCurve = curve;
+  document.getElementById('curveVoltBtn').classList.toggle('active', curve === 'voltage');
+  document.getElementById('curveCurrBtn').classList.toggle('active', curve === 'current');
+  renderProfileChart();
+}
+
+function clearActiveCurve() {
+  if (profileRunning) { toast('Stop the profile first'); return; }
+  if (activeCurve === 'voltage') voltagePoints = [];
+  else currentPoints = [];
+  renderProfileChart();
+}
+
+function setProfileDuration() {
+  const secs = parseHMS(document.getElementById('profDuration').value);
+  if (secs === null || secs <= 0) { toast('Invalid format, use HH.MM.SS'); return; }
+  profileDuration = secs;
+  voltagePoints.forEach((p) => { if (p.t > profileDuration) p.t = profileDuration; });
+  currentPoints.forEach((p) => { if (p.t > profileDuration) p.t = profileDuration; });
+  renderProfileChart();
+}
+
+async function saveProfile() {
+  if (profileRunning) { toast('Stop the profile first'); return; }
+  const body = {
+    duration_sec: profileDuration,
+    voltage_points: voltagePoints,
+    current_points: currentPoints,
+  };
+  const r = await api('/api/profile', body);
+  if (r && r.ok) toast('Profile saved');
+}
+
+function updateProfileRunUI() {
+  document.getElementById('profChartWrap').classList.toggle('running', profileRunning);
+  document.getElementById('profRunBtn').textContent = profileRunning ? 'Stop' : 'Run';
+  document.getElementById('profRunBtn').className = profileRunning ? '' : 'danger';
+  document.getElementById('profStatus').classList.toggle('running', profileRunning);
+  document.getElementById('profStatusText').textContent = profileRunning
+    ? 'Running -- ' + formatHMS(profileElapsed) + ' / ' + formatHMS(profileDuration)
+    : 'Stopped';
+  renderProfileChart();
+}
+
+async function toggleProfileRun() {
+  const r = await api('/api/profile/run', { run: !profileRunning });
+  if (!r) return;
+  if (!r.ok) { toast('Nothing to run -- add some points first'); return; }
+  profileRunning = r.running;
+  profileElapsed = r.elapsed_sec;
+  updateProfileRunUI();
+}
+
+async function loadProfile() {
+  const r = await api('/api/profile');
+  if (!r) return;
+  profileDuration = r.duration_sec > 0 ? r.duration_sec : 3600;
+  voltagePoints = r.voltage_points || [];
+  currentPoints = r.current_points || [];
+  profileRunning = r.running;
+  profileElapsed = r.elapsed_sec;
+  document.getElementById('profDuration').value = formatHMS(profileDuration);
+  updateProfileRunUI();
+}
+
 // Enter submits the same as pressing the adjacent "Set" button, and blurs
 // the field afterward so a mobile on-screen keyboard closes.
 function onEnter(id, fn) {
@@ -515,7 +941,9 @@ onEnter('offV', () => setVal('offV', '/api/voltage/offline'));
 onEnter('onI', () => setVal('onI', '/api/current/online'));
 onEnter('offI', () => setVal('offI', '/api/current/offline'));
 onEnter('timerInput', setTimer);
+onEnter('profDuration', setProfileDuration);
 
+loadProfile();
 refresh();
 setInterval(refresh, 500); // device-side telemetry itself refreshes ~every 200ms (can_bridge.cpp)
 </script>
