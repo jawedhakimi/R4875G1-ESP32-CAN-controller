@@ -136,6 +136,10 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
   }
   .legend-chip .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
   .legend-chip b { font-weight: 600; }
+  .legend-chip .scale-input {
+    width: 46px; background: #14161a; border: 1px solid #2c3038; color: #eaeaea;
+    border-radius: 4px; padding: 2px 3px; font-size: 0.8em; margin-left: 2px;
+  }
   .legend-chip button {
     background: none; border: none; color: #8a8f98; cursor: pointer;
     padding: 0 4px; font-size: 1.1em; line-height: 1;
@@ -258,6 +262,10 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
         <div class="var-chip" draggable="true" data-key="pin"><span class="dot" style="background:#facc15"></span>Pin <b id="chip-pin">--</b></div>
         <div class="var-chip" draggable="true" data-key="effi"><span class="dot" style="background:#c77dff"></span>Efficiency <b id="chip-effi">--</b></div>
       </div>
+      <div class="row" style="margin-bottom:8px;">
+        <label>Axis min</label><input type="number" id="axisMin" step="any" style="width:70px">
+        <label>max</label><input type="number" id="axisMax" step="any" style="width:70px">
+      </div>
       <div class="big-chart-wrap" id="chartDrop">
         <canvas id="bigChart" class="big-chart"></canvas>
         <div class="empty-hint" id="emptyHint">Drag or tap a variable above to plot it</div>
@@ -337,32 +345,101 @@ function fmt(v, digits) {
    the background all the time (cheap -- 150 samples x 7 variables), but
    only the ones in activeSeries are drawn, so dragging a variable onto
    the chart immediately backfills up to 5 minutes of history instead of
-   starting from empty. Each series is scaled to its own min/max within
-   the visible window -- that's the only sane way to plot volts, amps,
-   watts and a percentage on one shared canvas; the legend/chip values are
-   what carries the real numbers. A null sample (CAN link down) breaks
-   that series' line instead of plotting a false zero.
-   --------------------------------------------------------------------- */
+   starting from empty. A null sample (CAN link down) breaks that series'
+   line instead of plotting a false zero.
+
+   ONE shared numeric y-axis, with the min/max you type in above the
+   chart (persisted, editable any time) -- not a separate axis per
+   variable. Volts, amps, watts and a percentage obviously don't live on
+   the same natural scale, so each series also has a "x" multiplier
+   (legend, below the chart) applied to its raw value *before* it's
+   plotted against that one shared axis -- e.g. Pout ("x0.02") gets
+   compressed down into roughly the same visual band as Vout ("x1"). The
+   defaultScale below is just a reasonable starting point assuming a
+   0-100 axis; change either the axis range or a trace's multiplier
+   freely, they're independent knobs. --------------------------------- */
 const CHART_MAX_POINTS = 600; // ~5 min at the 500ms poll interval below
 
 const SERIES_META = {
-  vout: { label: 'Vout (V)',       color: '#4fd979', digits: 2, axis: 'y1' },
-  iout: { label: 'Iout (A)',       color: '#3d6bff', digits: 2, axis: 'y1' },
-  pout: { label: 'Pout (W)',       color: '#f5a623', digits: 2, axis: 'y1' },
-  vin:  { label: 'Vin (V)',        color: '#22d3ee', digits: 2, axis: 'y2' },
-  iin:  { label: 'Iin (A)',        color: '#f472b6', digits: 2, axis: 'y1' },
-  pin:  { label: 'Pin (W)',        color: '#facc15', digits: 2, axis: 'y1' },
-  effi: { label: 'Efficiency (%)', color: '#c77dff', digits: 1, axis: 'y1' },
+  vout: { label: 'Vout (V)',       color: '#4fd979', digits: 2, defaultScale: 1    },
+  iout: { label: 'Iout (A)',       color: '#3d6bff', digits: 2, defaultScale: 1    },
+  pout: { label: 'Pout (W)',       color: '#f5a623', digits: 2, defaultScale: 0.02 },
+  vin:  { label: 'Vin (V)',        color: '#22d3ee', digits: 2, defaultScale: 0.3  },
+  iin:  { label: 'Iin (A)',        color: '#f472b6', digits: 2, defaultScale: 1    },
+  pin:  { label: 'Pin (W)',        color: '#facc15', digits: 2, defaultScale: 0.02 },
+  effi: { label: 'Efficiency (%)', color: '#c77dff', digits: 1, defaultScale: 1    },
 };
 
-// Fixed dual y-axes -- every series is plotted against one of these two
-// scales instead of auto-fitting its own min/max, so absolute values are
-// readable off the chart the same way the Output Profile chart's axis is.
-// Values outside a series' axis range are simply clipped at the plot
-// edge rather than distorting the scale.
-const Y1_RANGE = { min: 0, max: 100 };
-const Y2_RANGE = { min: 90, max: 300 };
-const BIG_CHART_MARGIN = { left: 34, right: 40, top: 20, bottom: 6 };
+const SCALE_KEY = 'psuUiSeriesScale';
+
+function loadSeriesScale() {
+  const scale = {};
+  let saved = null;
+  try { saved = JSON.parse(localStorage.getItem(SCALE_KEY) || 'null'); } catch (e) { /* ignore */ }
+  Object.keys(SERIES_META).forEach((k) => {
+    const v = saved && saved[k];
+    scale[k] = (typeof v === 'number' && v > 0) ? v : SERIES_META[k].defaultScale;
+  });
+  return scale;
+}
+
+let seriesScale = loadSeriesScale();
+
+function saveSeriesScale() {
+  try { localStorage.setItem(SCALE_KEY, JSON.stringify(seriesScale)); } catch (e) { /* storage full/disabled -- not fatal */ }
+}
+
+function setSeriesScale(key, val) {
+  val = Number(val);
+  if (!isFinite(val) || val <= 0) val = SERIES_META[key].defaultScale;
+  seriesScale[key] = val;
+  saveSeriesScale();
+  renderBigChart();
+}
+
+// Raw device value -> what actually gets plotted against the shared axis.
+function scaledValue(key, raw) {
+  return raw * (seriesScale[key] || SERIES_META[key].defaultScale);
+}
+
+const AXIS_KEY = 'psuUiBigChartAxis';
+
+function loadAxisRange() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(AXIS_KEY) || 'null');
+    if (saved && isFinite(saved.min) && isFinite(saved.max) && saved.max > saved.min) return saved;
+  } catch (e) { /* ignore */ }
+  return { min: 0, max: 100 };
+}
+
+let axisRange = loadAxisRange();
+
+function saveAxisRange() {
+  try { localStorage.setItem(AXIS_KEY, JSON.stringify(axisRange)); } catch (e) { /* storage full/disabled -- not fatal */ }
+}
+
+// Bound to both number inputs' change events (below) -- either one being
+// edited re-reads and re-validates both together.
+function setAxisRange() {
+  const min = Number(document.getElementById('axisMin').value);
+  const max = Number(document.getElementById('axisMax').value);
+  if (!isFinite(min) || !isFinite(max) || max <= min) {
+    toast('Enter a valid min < max');
+    document.getElementById('axisMin').value = axisRange.min;
+    document.getElementById('axisMax').value = axisRange.max;
+    return;
+  }
+  axisRange = { min, max };
+  saveAxisRange();
+  renderBigChart();
+}
+
+document.getElementById('axisMin').value = axisRange.min;
+document.getElementById('axisMax').value = axisRange.max;
+document.getElementById('axisMin').addEventListener('change', setAxisRange);
+document.getElementById('axisMax').addEventListener('change', setAxisRange);
+
+const BIG_CHART_MARGIN = { left: 34, right: 8, top: 10, bottom: 6 };
 
 const histories = {};
 Object.keys(SERIES_META).forEach((k) => { histories[k] = []; });
@@ -404,16 +481,12 @@ function renderBigChart() {
   const rect = getBigPlotRect(w, h);
   const gridCount = 4;
 
+  // One shared numeric axis, labeled with the min/max entered above the
+  // chart -- every active series is plotted against this same axis (see
+  // the activeSeries loop below), after being multiplied by its own
+  // per-trace scale (legend, under the chart).
   bigCtx.font = '10px sans-serif';
-  bigCtx.fillStyle = '#5c6270';
-  bigCtx.fillText('y1 (0-100)', 2, 12);
-  const y2TitleW = bigCtx.measureText('y2 (90-300)').width;
-  bigCtx.fillText('y2 (90-300)', w - y2TitleW - 2, 12);
-
-  // One shared set of horizontal gridlines, labeled on the left with the
-  // y1 scale and on the right with the y2 scale -- a standard dual-axis
-  // layout so a value's height on the chart reads directly off either
-  // side depending on which axis its series uses (see SERIES_META).
+  bigCtx.textAlign = 'right';
   for (let i = 0; i <= gridCount; i++) {
     const y = rect.y + (rect.h / gridCount) * i;
 
@@ -424,17 +497,11 @@ function renderBigChart() {
     bigCtx.lineTo(rect.x + rect.w, y);
     bigCtx.stroke();
 
-    const y1Val = Y1_RANGE.max - ((Y1_RANGE.max - Y1_RANGE.min) / gridCount) * i;
-    const y2Val = Y2_RANGE.max - ((Y2_RANGE.max - Y2_RANGE.min) / gridCount) * i;
-
+    const val = axisRange.max - ((axisRange.max - axisRange.min) / gridCount) * i;
     bigCtx.fillStyle = '#5c6270';
-    const leftLabel = String(Math.round(y1Val));
-    const leftW = bigCtx.measureText(leftLabel).width;
-    bigCtx.fillText(leftLabel, rect.x - leftW - 6, y + 3);
-
-    const rightLabel = String(Math.round(y2Val));
-    bigCtx.fillText(rightLabel, rect.x + rect.w + 6, y + 3);
+    bigCtx.fillText(fmt(val, 1), rect.x - 6, y + 3);
   }
+  bigCtx.textAlign = 'left';
 
   const n = CHART_MAX_POINTS;
   const stepX = rect.w / (n - 1);
@@ -446,7 +513,6 @@ function renderBigChart() {
 
   activeSeries.forEach((key) => {
     const data = histories[key];
-    const range = SERIES_META[key].axis === 'y2' ? Y2_RANGE : Y1_RANGE;
     const offset = n - data.length;
 
     bigCtx.beginPath();
@@ -457,7 +523,12 @@ function renderBigChart() {
     data.forEach((v, i) => {
       if (v === null) { started = false; return; }
       const x = rect.x + (offset + i) * stepX;
-      const y = rect.y + rect.h - ((v - range.min) / (range.max - range.min)) * rect.h;
+      // Scale this trace's raw value onto the shared axis, then clip --
+      // a value outside the current axis range flattens at the plot edge
+      // instead of escaping the chart.
+      const scaled = scaledValue(key, v);
+      const clamped = Math.max(axisRange.min, Math.min(axisRange.max, scaled));
+      const y = rect.y + rect.h - ((clamped - axisRange.min) / (axisRange.max - axisRange.min)) * rect.h;
       if (!started) { bigCtx.moveTo(x, y); started = true; }
       else bigCtx.lineTo(x, y);
     });
@@ -490,6 +561,21 @@ function syncTrendUI() {
     val.id = 'legend-val-' + key;
     val.textContent = '--';
 
+    const scaleInput = document.createElement('input');
+    scaleInput.type = 'number';
+    scaleInput.className = 'scale-input';
+    scaleInput.min = '0.001';
+    scaleInput.step = 'any';
+    scaleInput.value = seriesScale[key] || meta.defaultScale;
+    scaleInput.title = 'Multiplier applied to this trace\'s raw value before it\'s plotted against the axis above';
+    scaleInput.addEventListener('click', (e) => e.stopPropagation());
+    scaleInput.addEventListener('change', () => setSeriesScale(key, scaleInput.value));
+
+    const scalePrefix = document.createElement('span');
+    scalePrefix.textContent = ' ×'; // multiplication sign, reads as "x1.0"
+    scalePrefix.style.fontSize = '0.8em';
+    scalePrefix.style.color = '#5c6270';
+
     const btn = document.createElement('button');
     btn.textContent = '×'; // ×
     btn.setAttribute('aria-label', 'Remove ' + meta.label);
@@ -498,6 +584,8 @@ function syncTrendUI() {
     chip.appendChild(dot);
     chip.appendChild(label);
     chip.appendChild(val);
+    chip.appendChild(scalePrefix);
+    chip.appendChild(scaleInput);
     chip.appendChild(btn);
     legend.appendChild(chip);
   });
