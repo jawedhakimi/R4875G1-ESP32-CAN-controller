@@ -10,12 +10,12 @@ bool suppress_timer_switch_event = false;
 
 /* --- persisted user settings: compile-time defaults, overwritten by
    prefs_load_all() at boot from whatever was last saved to NVS --- */
-float saved_online_v = 53.50f;
-float saved_offline_v = 53.50f;
-float saved_online_i = 10.00f;
+float saved_online_v = 48.0f;
+float saved_offline_v = 48.0f;
+float saved_online_i = 20.00f;
 float saved_offline_i = 10.00f;
 
-int saved_brightness_pct = 100;
+int saved_brightness_pct = 50;
 int saved_sleep_sec = 60;
 int saved_dim_sec = 30;
 

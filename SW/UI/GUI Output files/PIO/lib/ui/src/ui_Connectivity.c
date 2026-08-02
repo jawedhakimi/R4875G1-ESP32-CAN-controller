@@ -74,12 +74,10 @@ lv_obj_set_style_text_font(ui_Connectivity_TextAreaPassword, &lv_font_montserrat
 
 ui_Connectivity_TextAreaNetworkLog = lv_textarea_create(ui_Connectivity);
 lv_obj_set_width( ui_Connectivity_TextAreaNetworkLog, lv_pct(98));
-lv_obj_set_height( ui_Connectivity_TextAreaNetworkLog, lv_pct(40));
+lv_obj_set_height( ui_Connectivity_TextAreaNetworkLog, lv_pct(42));
 lv_obj_set_x( ui_Connectivity_TextAreaNetworkLog, 0 );
-lv_obj_set_y( ui_Connectivity_TextAreaNetworkLog, -86 );
+lv_obj_set_y( ui_Connectivity_TextAreaNetworkLog, -77 );
 lv_obj_set_align( ui_Connectivity_TextAreaNetworkLog, LV_ALIGN_BOTTOM_MID );
-lv_textarea_set_text(ui_Connectivity_TextAreaNetworkLog,"Enter the network SSID and password. Then visit the xxx.xxx.xx.xx IP-address to control the device using a PC");
-lv_textarea_set_placeholder_text(ui_Connectivity_TextAreaNetworkLog,"Network Log");
 
 ui_Connectivity_Keyboard = lv_keyboard_create(ui_Connectivity);
 lv_obj_set_height( ui_Connectivity_Keyboard, 170);

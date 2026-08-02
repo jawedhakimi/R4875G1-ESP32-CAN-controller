@@ -1,5 +1,6 @@
 #include "web_server.h"
 #include <WebServer.h>
+#include <Update.h>
 #include <ArduinoJson.h>
 #include "config.h"
 #include "app_state.h"
@@ -322,6 +323,64 @@ static void handle_profile_run() {
     send_json(resp);
 }
 
+/* ---------------------------------------------------------------------
+   Browser-based OTA upload -- lets you flash a compiled .bin from the
+   "Firmware Update" panel on the web page without needing PlatformIO/
+   Arduino IDE installed on whatever machine you're using (see ota.cpp
+   for the PlatformIO-network-upload alternative). Auth is checked in
+   UPLOAD_FILE_START, before Update.begin() -- an unauthenticated POST
+   never gets as far as writing to flash. --------------------------------- */
+static bool s_update_authorized = false;
+
+static void handle_update_upload() {
+    HTTPUpload &upload = server.upload();
+
+    if (upload.status == UPLOAD_FILE_START) {
+        s_update_authorized = server.authenticate(WEB_AUTH_USER, WEB_AUTH_PASS);
+        if (!s_update_authorized) {
+            Serial.println("OTA (web): unauthorized upload attempt, ignoring.");
+            return;
+        }
+        Serial.printf("OTA (web): receiving \"%s\"\n", upload.filename.c_str());
+        if (!Update.begin(UPDATE_SIZE_UNKNOWN)) {
+            Update.printError(Serial);
+        }
+    } else if (upload.status == UPLOAD_FILE_WRITE) {
+        if (!s_update_authorized) return;
+        if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
+            Update.printError(Serial);
+        }
+    } else if (upload.status == UPLOAD_FILE_END) {
+        if (!s_update_authorized) return;
+        if (Update.end(true)) {
+            Serial.printf("OTA (web): update OK, %u bytes -- rebooting\n", upload.totalSize);
+        } else {
+            Update.printError(Serial);
+        }
+    } else if (upload.status == UPLOAD_FILE_ABORTED) {
+        Update.end();
+        Serial.println("OTA (web): upload aborted");
+    }
+}
+
+// Runs once the upload body above has been fully received/written.
+static void handle_update_result() {
+    server.sendHeader("Connection", "close");
+
+    if (!s_update_authorized) {
+        server.requestAuthentication();
+        return;
+    }
+    if (Update.hasError()) {
+        server.send(200, "text/plain", "Update FAILED -- device NOT rebooting. Check the serial log.");
+        return;
+    }
+
+    server.send(200, "text/plain", "Update OK -- rebooting now.");
+    delay(200); // give the response time to actually go out before restarting
+    ESP.restart();
+}
+
 static void handle_not_found() {
     server.send(404, "text/plain", "Not found");
 }
@@ -350,6 +409,8 @@ void web_server_begin() {
     server.on("/api/profile", HTTP_GET, handle_profile_get);
     server.on("/api/profile", HTTP_POST, handle_profile_set);
     server.on("/api/profile/run", HTTP_POST, handle_profile_run);
+
+    server.on("/update", HTTP_POST, handle_update_result, handle_update_upload);
 
     server.onNotFound(handle_not_found);
     server.begin();

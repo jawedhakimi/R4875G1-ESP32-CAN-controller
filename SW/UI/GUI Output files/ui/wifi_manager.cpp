@@ -291,6 +291,15 @@ void wifi_manager_loop() {
             wifi_log("Web panel: http://" + ip + "/  (user: " + String(WEB_AUTH_USER) +
                       ", pass: " + String(WEB_AUTH_PASS) + ")");
 
+            // OTA reference info -- printed here (once per fresh connection)
+            // so it's readable straight off this screen without needing
+            // physical/serial access or digging through the source. The pio
+            // command below has this session's live IP baked in, ready to
+            // copy as-is.
+            wifi_log("OTA (PlatformIO): pio run -e esp32-s3-devkitc-1-ota -t upload --upload-port " + ip);
+            wifi_log("OTA auth: " + String(OTA_PASSWORD) + "  (mDNS host: " + String(OTA_HOSTNAME) + ".local)");
+            wifi_log("OTA (browser): open the web panel above, use its Firmware Update section.");
+
             // Only actually saved once the connection is confirmed good --
             // a typo'd SSID/password never makes it into the saved list.
             upsert_saved_network(current_ssid, current_pass);

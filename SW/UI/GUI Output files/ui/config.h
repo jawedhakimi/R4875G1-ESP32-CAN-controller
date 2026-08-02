@@ -53,4 +53,21 @@
 #define WEB_AUTH_PASS   "psucontrol"
 #define WEB_SERVER_PORT 80
 
+/* =========================================================
+   OTA (Over-The-Air) FIRMWARE UPDATE
+   Lets you push new firmware over the same WiFi network entered on the
+   Connectivity screen -- no USB/physical access needed. Two ways in:
+     1. PlatformIO: `pio run -e esp32-s3-devkitc-1-ota -t upload` (see
+        platformio.ini) -- uses ArduinoOTA (ota.cpp), discoverable via
+        mDNS at OTA_HOSTNAME + ".local".
+     2. Browser: open http://<device-ip>/ and use the "Firmware Update"
+        panel to upload a compiled .bin -- served by web_server.cpp.
+   CHANGE OTA_PASSWORD before deploying, same reasoning as WEB_AUTH_PASS
+   above: anyone on the LAN who can push arbitrary firmware onto this
+   thing can do anything with your mains-connected rectifier. Keep it in
+   sync with platformio.ini's `--auth=` upload flag if you change it.
+   ========================================================= */
+#define OTA_HOSTNAME  "huawei-psu-controller"
+#define OTA_PASSWORD  "psuota"
+
 #endif

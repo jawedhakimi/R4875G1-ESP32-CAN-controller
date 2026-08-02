@@ -234,6 +234,18 @@ static const char WEB_INDEX_HTML[] PROGMEM = R"HTMLPAGE(
     <div class="win-resize"></div>
   </div>
 
+  <div class="win" data-key="ota">
+    <div class="win-titlebar"><span class="win-title">Firmware Update <span class="hint">(OTA)</span></span></div>
+    <div class="win-body">
+      <form id="otaForm" method="POST" action="/update" enctype="multipart/form-data" target="otaFrame" onsubmit="return confirmOta()">
+        <div class="row"><input type="file" id="otaFile" name="update" accept=".bin" required></div>
+        <div class="row"><button type="submit" class="danger">Upload &amp; Flash</button><span id="otaStatus"></span></div>
+      </form>
+      <iframe name="otaFrame" id="otaFrame" style="display:none"></iframe>
+    </div>
+    <div class="win-resize"></div>
+  </div>
+
   <div class="win" data-key="trends">
     <div class="win-titlebar"><span class="win-title">Trends <span class="hint">(drag a variable onto the chart, or tap it)</span></span></div>
     <div class="win-body flex-col">
@@ -659,6 +671,32 @@ async function resetEnergy() {
 }
 
 /* ---------------------------------------------------------------------
+   Firmware Update (OTA) -- a plain HTML form posting multipart to
+   /update, submitted into a hidden iframe so it doesn't navigate away
+   from this page. Deliberately not fetch()/XHR: this is a rarely-used,
+   high-stakes action (it reboots the device into new code) and a native
+   form POST is the most robust way to send a large binary over
+   potentially flaky WiFi -- no risk of a JS-side timeout/abort logic bug
+   corrupting an otherwise-fine upload. The browser already has Basic
+   Auth credentials cached for this origin from loading the page, so no
+   extra login step is needed here. --------------------------------- */
+function confirmOta() {
+  const f = document.getElementById('otaFile').files[0];
+  if (!f) { toast('Choose a .bin file first'); return false; }
+  if (!confirm('Flash "' + f.name + '" (' + Math.round(f.size / 1024) + ' KB)? The device will reboot when done.')) {
+    return false;
+  }
+  document.getElementById('otaStatus').textContent = ' Uploading...';
+  return true;
+}
+
+document.getElementById('otaFrame').addEventListener('load', () => {
+  let text = '';
+  try { text = document.getElementById('otaFrame').contentDocument.body.textContent; } catch (e) { /* cross-origin, shouldn't happen same-origin */ }
+  if (text) document.getElementById('otaStatus').textContent = ' ' + text;
+});
+
+/* ---------------------------------------------------------------------
    Output Profile -- a scheduled voltage/current curve, edited here and
    executed live on the device (psu_profile.cpp). Two independent point
    arrays (voltage, current), each an ordered list of {t, v}. Only the
@@ -1081,6 +1119,7 @@ const DEFAULT_LAYOUT = {
   telemetry: { left: 16,  top: 16,  width: 340, height: 320, z: 1 },
   setpoints: { left: 16,  top: 352, width: 340, height: 250, z: 1 },
   fantimer:  { left: 16,  top: 618, width: 340, height: 230, z: 1 },
+  ota:       { left: 16,  top: 864, width: 340, height: 150, z: 1 },
   trends:    { left: 372, top: 16,  width: 760, height: 560, z: 1 },
   profile:   { left: 372, top: 592, width: 760, height: 460, z: 1 },
 };

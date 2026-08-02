@@ -27,6 +27,7 @@
 #include "serial_console.h"
 #include "wifi_manager.h"
 #include "web_server.h"
+#include "ota.h"
 
 /* =========================================================
    DISPLAY / LVGL
@@ -134,6 +135,7 @@ void setup() {
        WiFi comes up. */
     wifi_manager_begin();
     web_server_begin();
+    ota_begin();
 
     log_to_settings("System boot complete");
     Serial.println("Setup done");
@@ -157,4 +159,5 @@ void loop() {
     handle_serial_commands();
     wifi_manager_loop();
     web_server_loop();
+    ota_loop();
 }
